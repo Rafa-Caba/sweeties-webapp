@@ -8,6 +8,8 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
+    width: 100%;
+    overflow-x: hidden;
     font-family: ${({ theme }) => theme.fonts.main};
     background-color: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text};

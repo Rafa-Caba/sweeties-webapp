@@ -5,10 +5,13 @@ import { MainLayout } from './layouts/public/MainLayout';
 import { InicioPage } from './pages/public/InicioPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { GaleriaPage } from './pages/public/GaleriaPage';
-import { OrdenarPage } from './pages/public/OrdenarPage';
+import { ItemPage } from './pages/public/ItemPage';
 import { ContactoPage } from './pages/public/ContactoPage';
-import { CarritoPage } from './pages/public/CarritoPage';
-import { NosotrosPage } from './pages/public/NosotrosPage';
+import { AboutPage } from './pages/public/AboutPage';
+import { CartPage } from './pages/public/CartPage';
+import { OrdersPage } from './pages/public/OrdersPage';
+import { OrderSinglePage } from './pages/public/OrderSinglePage';
+import { CheckoutPage } from './pages/public/CheckoutPage';
 
 function App() {
     return (
@@ -19,10 +22,13 @@ function App() {
                     <Route path="/" element={<MainLayout />}>
                         <Route index element={<InicioPage />} />
                         <Route path="galeria" element={<GaleriaPage />} />
-                        <Route path="ordenar" element={<OrdenarPage />} />
+                        <Route path="galeria/item/:id" element={<ItemPage />} />
+                        <Route path="ordenes" element={<OrdersPage />} />
+                        <Route path="/ordenes/:id" element={<OrderSinglePage />} />
                         <Route path="contacto" element={<ContactoPage />} />
-                        <Route path="conocenos" element={<NosotrosPage />} />
-                        <Route path="carrito" element={<CarritoPage />} />
+                        <Route path="acerca" element={<AboutPage />} />
+                        <Route path="cart" element={<CartPage />} />
+                        <Route path="/finalizar" element={<CheckoutPage />} />
                     </Route>
                 </Routes>
             </Router>

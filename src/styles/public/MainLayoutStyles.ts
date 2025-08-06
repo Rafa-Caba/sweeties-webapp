@@ -12,9 +12,9 @@ export const HeroWaveBackground = styled.div<{ $isInicio?: boolean }>`
   position: relative;
   width: 100%;
   height: 100vh;
-  overflow: hidden;
+  overflow: visible;
+  overflow-x: hidden;
   min-height: ${({ $isInicio }) => ($isInicio ? '100vh' : 'auto')};
-  max-height: 100vh;
 
   &::before {
     content: '';
@@ -31,12 +31,20 @@ export const HeroWaveBackground = styled.div<{ $isInicio?: boolean }>`
       bottom: 22vw;
     }
 
-    @media (max-width: 1520px) {
-      bottom: 25vw;
+    @media (max-width: 1270px) {
+      bottom: 21vw;
+    }
+
+    @media (max-width: 900px) {
+      bottom: 67vw;
     }
 
     @media (max-width: 768px) {
-      bottom: 123vw;
+      bottom: 113vw;
+    }
+
+    @media (max-width: 408px) {
+      bottom: 110vw;
     }
   }
 
@@ -59,14 +67,18 @@ export const YarnIcon = styled.img`
   z-index: 2;
   
   @media (max-width: 1270px) {
-    width: 200px;
+    width: 300px;
     top: 4.7rem;
     left: 0.5rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 980px) {
+    width: 250px;
+  }
+
+  @media (max-width: 580px) {
     width: 130px;
-    top: 4.5rem;
+    top: 5.5rem;
     left: 0.5rem;
   }
 `;

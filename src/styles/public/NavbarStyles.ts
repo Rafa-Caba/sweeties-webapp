@@ -84,7 +84,7 @@ export const NavbarItem = styled.button`
   color: ${({ theme }) => theme.colors.text};
   border: none;
   border-radius: 999px;
-  padding: 0.4rem 0.8rem;
+  padding: 0.4rem 0.9rem;
   font-weight: bold;
   font-size: 0.9rem;
   cursor: pointer;

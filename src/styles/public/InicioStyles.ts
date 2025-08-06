@@ -70,9 +70,15 @@ export const NeedleIcon = styled.img`
   width: 250px;
   z-index: 2;
   
-  @media (max-width: 768px) {
-    width: 80px;
-    top: 6.3rem;
+  @media (max-width: 980px) {
+    width: 160px;
+    top: 6.7rem;
+    right: 1rem;
+  }
+
+  @media (max-width: 580px) {
+    width: 70px;
+    top: 7rem;
     right: 0.5rem;
   }
 `;
@@ -86,9 +92,17 @@ export const Title = styled.h1`
   text-shadow: ${({ theme }) =>
     theme.colors.background === '#1e1e1e'
       ? '0 0 8px rgba(255, 255, 255, 0.3)'
-      : 'none'
+      : 'none'};
+
+
+  @media (max-width: 1270px) {
+    margin-bottom: 0rem;
+    font-size: 8rem;
   }
-  ;
+
+  @media (max-width: 980px) {
+    font-size: 7rem;
+  }
 
   @media (max-width: 768px) {
     font-size: 4rem;
@@ -102,6 +116,15 @@ export const Subtitle = styled.h2`
   color: ${({ theme }) => theme.colors.mainSubtitle};
   margin-bottom: 8rem;
 
+  @media (max-width: 1270px) {
+    margin-bottom: 6rem;
+    font-size: 3rem;
+  }
+
+  @media (max-width: 980px) {
+    font-size: 2.5rem;
+  }
+
   @media (max-width: 768px) {
     margin-bottom: 2rem;
     font-size: 1.7rem;
@@ -113,6 +136,10 @@ export const CreatorName = styled.p`
   font-size: 2.5rem;
   color: ${({ theme }) => theme.colors.creatorName};
   font-style: italic;
+
+  @media (max-width: 980px) {
+    font-size: 1.7rem;
+  }
 
   @media (max-width: 768px) {
     font-size: 1.1rem;
@@ -131,9 +158,24 @@ export const NavButtonsWrapper = styled.div`
   z-index: 3;
   position: relative;
 
+  @media (max-width: 1270px) {
+    margin: 1rem 2rem 8.5rem;
+    gap: 3rem;
+  }
+
+  @media (max-width: 980px) {
+    margin: 13rem 4rem 2rem;
+    gap: 5rem;
+  }
+
   @media (max-width: 768px) {
-    margin-top: 5rem;
+    margin: 11rem 0.5rem 1rem;
     gap: 2rem;
+  }
+
+  @media (max-width: 408px) {
+    margin: 9rem 2rem 1rem;
+    gap: 1.7rem;
   }
 `;
 
@@ -161,9 +203,27 @@ export const NavCircleButton = styled.button<ButtonProps>`
     background-color: ${({ theme }) => theme.colors.buttonHover};
   }
 
+  @media (max-width: 1150px) {
+    width: 140px;
+    height: 140px;
+    font-size: 1.3rem;
+  }
+
+  @media (max-width: 980px) {
+    width: 140px;
+    height: 140px;
+    font-size: 1.3rem;
+  }
+
   @media (max-width: 768px) {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 408px) {
+    width: 90px;
+    height: 90px;
     font-size: 0.8rem;
   }
 
@@ -172,6 +232,17 @@ export const NavCircleButton = styled.button<ButtonProps>`
     `
       top: 4rem;
       left: -12rem;
+
+      @media (max-width: 1270px) {
+        top: 1.5rem;
+        left: -4rem;
+      }
+
+      @media (max-width: 980px) {
+        order: 1;
+        top: 0rem;
+        left: 0rem;
+      }
 
       @media (max-width: 768px) {
         order: 1;
@@ -186,9 +257,20 @@ export const NavCircleButton = styled.button<ButtonProps>`
       top: 8.5rem;
       left: -7rem;
 
+      @media (max-width: 1270px) {
+        top: 5.5rem;
+        left: -2rem;
+      }
+
+      @media (max-width: 980px) {
+        order: 3;
+        top: 0rem;
+        left: 0rem;
+      }
+
       @media (max-width: 768px) {
-        order: 2;
-        top: 1.5rem;
+        order: 3;
+        top: 0rem;
         left: 0rem;
       }
     `}
@@ -200,9 +282,19 @@ export const NavCircleButton = styled.button<ButtonProps>`
       left: 0rem;
       right: 0rem;
 
+      @media (max-width: 1270px) {
+        top: 7.5rem;
+        left: 0rem;
+      }
+
+      @media (max-width: 980px) {
+        order: 2;
+        top: 1.5rem;
+      }
+
       @media (max-width: 768px) {
-        order: 3;
-        top: 0rem;
+        order: 2;
+        top: 1.5rem;
       }
     `}
 
@@ -211,6 +303,17 @@ export const NavCircleButton = styled.button<ButtonProps>`
     `
       top: 8.5rem;
       right: -7rem;
+
+      @media (max-width: 1270px) {
+        top: 5.5rem;
+        right: -2rem;
+      }
+
+      @media (max-width: 980px) {
+        order: 4;
+        top: 0.5rem;
+        right: 0rem;
+      }
 
       @media (max-width: 768px) {
         order: 4;
@@ -224,6 +327,17 @@ export const NavCircleButton = styled.button<ButtonProps>`
     `
       top: 4rem;
       right: -12rem;
+
+      @media (max-width: 1270px) {
+        top: 1.5rem;
+        right: -4rem;
+      }
+
+      @media (max-width: 980px) {
+        order: 5;
+        top: 0.5rem;
+        right: 0rem;
+      }
 
       @media (max-width: 768px) {
         order: 5;

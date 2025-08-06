@@ -61,9 +61,11 @@ export const PublicNavbar = () => {
 
                 <div className="desktop-links">
                     <NavbarItem onClick={() => handleNavigate('/')}>Inicio</NavbarItem>
-                    <NavbarItem onClick={() => handleNavigate('/ordenar')}>Órdenes</NavbarItem>
+                    <NavbarItem onClick={() => handleNavigate('/galeria')}>Galeria</NavbarItem>
+                    <NavbarItem onClick={() => handleNavigate('/ordenes')}>Órdenes</NavbarItem>
                     <NavbarItem onClick={() => handleNavigate('/contacto')}>Contacto / Ayuda</NavbarItem>
-                    <CartIcon onClick={() => handleNavigate('/carrito')}>
+                    <NavbarItem onClick={() => handleNavigate('/acerca')}>Conócenos</NavbarItem>
+                    <CartIcon onClick={() => handleNavigate('/cart')}>
                         <FaShoppingCart />
                     </CartIcon>
                 </div>
@@ -74,9 +76,10 @@ export const PublicNavbar = () => {
                     <MobileMenuBackdrop onClick={toggleMenu} />
                     <MobileMenu>
                         <MobileMenuItem onClick={() => handleNavigate('/')}>Inicio</MobileMenuItem>
-                        <MobileMenuItem onClick={() => handleNavigate('/ordenar')}>Órdenes</MobileMenuItem>
+                        <MobileMenuItem onClick={() => handleNavigate('/ordenes')}>Órdenes</MobileMenuItem>
                         <MobileMenuItem onClick={() => handleNavigate('/contacto')}>Contacto / Ayuda</MobileMenuItem>
-                        <MobileMenuItem onClick={() => handleNavigate('/carrito')}>
+                        <MobileMenuItem onClick={() => handleNavigate('/acerca')}>Conócenos</MobileMenuItem>
+                        <MobileMenuItem onClick={() => handleNavigate('/cart')}>
                             <FaShoppingCart /> Carrito
                         </MobileMenuItem>
                     </MobileMenu>

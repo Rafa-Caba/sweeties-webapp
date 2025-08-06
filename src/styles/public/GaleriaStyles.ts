@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const GaleriaSectionContainer = styled.section`
-  padding: 4rem 1rem;
+  padding: 4rem 1rem 1rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,8 +14,7 @@ export const GaleriaSectionContainer = styled.section`
 `;
 
 export const GaleriaWrapper = styled.section`
-  margin-top: 6rem;
-  padding: 4rem 1rem 2rem;
+  padding: 9rem 1rem 1rem 1rem;
   text-align: center;
   color: ${({ theme }) => theme.colors.text};
   min-height: 100vh;
@@ -24,7 +23,13 @@ export const GaleriaWrapper = styled.section`
   position: relative;
 
   @media (max-width: 768px) {
-    padding-top: 1rem;
+    padding-top: 7rem;
+    padding-bottom: 4rem;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 408px) {
+    padding-top: 7rem;
     padding-bottom: 4rem;
     overflow-y: auto;
   }
@@ -40,14 +45,22 @@ export const GaleriaTitle = styled.h2`
 `;
 
 export const ItemsGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1.5rem;
-    max-width: 1000px;
-    margin: 0 auto 3rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto 3rem;
 
-    z-index: 2;
-    position: relative;
+  @media (max-width: 1280px) {
+    margin: 0 2rem 3rem;
+  }
+
+  @media (max-width: 760px) {
+    margin: 0 auto 3rem;
+  }
+
+  z-index: 2;
+  position: relative;
 `;
 
 export const GaleriaItemCard = styled.div`
