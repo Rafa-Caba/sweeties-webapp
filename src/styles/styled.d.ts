@@ -16,7 +16,19 @@ declare module 'styled-components' {
             mainSubtitle: string;
             creatorName: string;
             buttonText: string;
-        };
+            card: string;
+            border: string;
+            navBg: string,
+            sidebarBg: string,
+            pageBg: string,
+            cardBackground: string,
+            cardShadow: string,
+            cardHoverShadow: string,
+            textSecondary: string,
+        },
+        shadows: {
+            card: string;
+        },
         fonts: {
             main: string;
             handwritten: string;

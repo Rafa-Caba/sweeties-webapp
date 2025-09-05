@@ -27,6 +27,10 @@ export const HeroWaveBackground = styled.div<{ $isInicio?: boolean }>`
     border-radius: 50%;
     z-index: 1;
 
+    @media (min-width: 1920px) {
+      bottom: 25vw;
+    }
+    
     @media (max-width: 1920px) {
       bottom: 22vw;
     }

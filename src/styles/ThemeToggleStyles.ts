@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const ThemeToggleBtn = styled.button`
   position: fixed;
   top: 1.2rem;
-  right: 1.5rem;
+  right: 4.8rem;
   z-index: 1002;
   background: none;
   border: none;
