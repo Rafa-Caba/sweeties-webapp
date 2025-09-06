@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
                     try {
                         const user = await registerUser(payload);
                         set({ user });
-                    } catch (err) {
+                    } catch {
                         showErrorToast('Registration failed.');
                     } finally {
                         set({ loading: false });
@@ -77,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
                         set({ user });
 
                         return true;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     } catch (error) {
                         showErrorToast('Session expired. Please log in again.');
                         await get().logout();
