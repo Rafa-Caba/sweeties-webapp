@@ -9,7 +9,7 @@ interface Props {
 export const PrivateRoute = ({ children }: Props) => {
     const { isAuthenticated, loading } = useAuth();
 
-    if (loading) return <p>Loading...</p>; // Or a spinner
+    if (loading) return <p>Loading...</p>;
 
     return isAuthenticated ? children : <Navigate to="/admin/login" replace />;
 };
