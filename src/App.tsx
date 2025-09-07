@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { AdminLayout } from './layouts/admin/AdminLayout';
 import { MainLayout } from './layouts/public/MainLayout';
@@ -50,7 +50,8 @@ function App() {
                     </Route>
 
                     {/* Admin Layout */}
-                    <Route path="/admin"
+                    <Route
+                        path="/admin"
                         element={
                             <PrivateRoute>
                                 <AdminLayout />
@@ -58,12 +59,12 @@ function App() {
                         }
                     >
                         <Route index element={<AdminDashboardPage />} />
-                        <Route path='/admin/items' element={<ItemsPage />} />
-                        <Route path='/admin/items/new' element={<NewItemPage />} />
-                        <Route path='/admin/items/:id/edit' element={<EditItemPage />} />
-                        <Route path='/admin/users' element={<UsersPage />} />
-                        <Route path='/admin/users/new' element={<NewUserPage />} />
-                        <Route path='/admin/users/:id/edit' element={<EditUserPage />} />
+                        <Route path="/admin/items" element={<ItemsPage />} />
+                        <Route path="/admin/items/new" element={<NewItemPage />} />
+                        <Route path="/admin/items/:id/edit" element={<EditItemPage />} />
+                        <Route path="/admin/users" element={<UsersPage />} />
+                        <Route path="/admin/users/new" element={<NewUserPage />} />
+                        <Route path="/admin/users/:id/edit" element={<EditUserPage />} />
                     </Route>
 
                     {/* Auth Routes (no layout) */}
