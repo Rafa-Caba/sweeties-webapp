@@ -5,13 +5,13 @@ import {
     HeroWaveBackground,
 } from '../../styles/public/MainLayoutStyles';
 import yarnImg from '../../assets/yarn-icon.png';
-import { ThemeToggleButton } from '../../components/ThemeToggleButton';
+import { AdminThemeToggleButton } from '../../components/admin/AdminThemeToggleButton';
 
 export const AdminLayout = () => {
     return (
         <LayoutContainer>
             <header>
-                <ThemeToggleButton />
+                <AdminThemeToggleButton />
                 {/* You can later add AdminNavbar or sidebar here */}
             </header>
 

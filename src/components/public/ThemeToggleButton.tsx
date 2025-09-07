@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { Tooltip } from "react-tooltip";
-import { useThemeContext } from "../context/ThemeContext";
-import { ThemeToggleBtn } from "../styles/ThemeToggleStyles"
-
+import { useEffect, useState } from 'react';
+import { Tooltip } from 'react-tooltip';
+import { useThemeContext } from '../../context/ThemeContext';
+import { ThemeToggleBtn } from '../../styles/ThemeToggleStyles';
 
 export const ThemeToggleButton = () => {
     const { isDark, toggleTheme } = useThemeContext();
@@ -28,11 +27,9 @@ export const ThemeToggleButton = () => {
                 data-tooltip-id="themeTip"
                 data-tooltip-content={isDark ? 'Cambiar a Claro' : 'Cambiar a Oscuro'}
             >
-                <span className={`theme-toggle-icon ${isFlipping ? 'flipping' : ''}`}>
-                    {icon}
-                </span>
+                <span className={`theme-toggle-icon ${isFlipping ? 'flipping' : ''}`}>{icon}</span>
             </ThemeToggleBtn>
             <Tooltip id="themeTip" place="left" />
         </>
-    )
-}
+    );
+};

@@ -5,7 +5,7 @@ import {
     HeroWaveBackground,
 } from '../../styles/public/MainLayoutStyles';
 import yarnImg from '../../assets/yarn-icon.png';
-import { ThemeToggleButton } from '../../components/ThemeToggleButton';
+import { ThemeToggleButton } from '../../components/public/ThemeToggleButton';
 import { PublicNavbar } from '../../components/public/PublicNavbar';
 
 export const MainLayout = () => {
