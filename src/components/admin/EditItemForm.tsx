@@ -29,7 +29,7 @@ export const EditItemForm = ({ item }: Props) => {
                 }
             });
 
-            await updateItem(item._id, form);
+            await updateItem(item.id, form);
             alert("Item actualizado con éxito!");
         } catch (err) {
             console.error(err);

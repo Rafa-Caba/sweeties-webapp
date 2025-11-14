@@ -24,6 +24,6 @@ export const useAuth = () => {
         setUser,
         setToken,
         isAuthenticated: !!token,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'ADMIN',
     };
 };
