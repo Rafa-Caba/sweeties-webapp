@@ -10,7 +10,7 @@ import {
 } from '../../styles/admin/SettingsStyles';
 import { SubmitButton } from '../../styles/admin/ProfileStyles'; 
 import { showSuccessToast, showErrorToast } from '../../utils/showToast';
-import type { AdminSettings } from '../../types/admin/Settings';
+import type { AdminSettings } from '../../types/admin/settings';
 
 // Define tabs
 type Tab = 'general' | 'branding' | 'contact' | 'about' | 'features' | 'seo' | 'social';

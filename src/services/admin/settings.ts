@@ -1,5 +1,5 @@
 import api from '../../api/axios.api';
-import type { AdminSettings } from '../../types/admin/Settings';
+import type { AdminSettings } from '../../types/admin/settings';
 
 export const getAdminSettings = async (): Promise<AdminSettings> => {
     const { data } = await api.get<AdminSettings>('/admin/admin-settings');

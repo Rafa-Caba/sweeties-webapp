@@ -1,5 +1,5 @@
 import api from '../../api/axios.api';
-import type { AdminSettings } from '../../types/admin/Settings'; // We can reuse the type, or make a specific PublicSettings type
+import type { AdminSettings } from '../../types/admin/settings'; // We can reuse the type, or make a specific PublicSettings type
 
 // This calls the PUBLIC endpoint (no auth required)
 export const getPublicSettings = async (): Promise<AdminSettings> => {

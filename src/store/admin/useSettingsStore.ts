@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { getAdminSettings, updateAdminSettings } from '../../services/admin/settings';
-import type { AdminSettings } from '../../types/admin/Settings';
+import type { AdminSettings } from '../../types/admin/settings';
 
 interface SettingsState {
     settings: AdminSettings | null;
