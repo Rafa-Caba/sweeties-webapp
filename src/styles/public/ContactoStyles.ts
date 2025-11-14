@@ -110,3 +110,46 @@ export const FormGroup = styled.div`
     overflow: hidden;
   }
 `;
+
+export const ContactoInfoBox = styled.div`
+    background: ${({ theme }) => theme.colors.card};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: ${({ theme }) => theme.shadows.card};
+
+    p {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: ${({ theme }) => theme.colors.text};
+    }
+
+    span {
+        font-size: 1rem;
+        color: ${({ theme }) => theme.colors.textSecondary};
+    }
+
+    .whatsapp-button {
+        display: inline-block;
+        background-color: #25D366;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+    }
+`;

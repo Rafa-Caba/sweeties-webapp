@@ -45,7 +45,7 @@ export const EditUserSection = () => {
                     username: user.username,
                     email: user.email,
                     password: '',
-                    role: user.role,
+                    role: user.role.toLowerCase(),
                     bio: user.bio || '',
                     image: null,
                     imagePreview: user.imageUrl || '',
@@ -92,24 +92,33 @@ export const EditUserSection = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Campos obligatorios',
-                text: 'Por favor completa todos los campos requeridos.',
-            });
-            return;
+        if (!validateForm()) return;
+
+        // 1. Create the DTO object that matches UpdateUserDTO
+        const userDTO = {
+            name: formData.name,
+            username: formData.username,
+            email: formData.email,
+            role: formData.role,
+            bio: formData.bio,
+            // Only include password if the user entered a new one
+            ...(formData.password && { password: formData.password })
+        };
+
+        // 2. Create the FormData
+        const data = new FormData();
+
+        // 3. Append the DTO as a JSON string Blob
+        data.append('user', new Blob([JSON.stringify(userDTO)], {
+            type: 'application/json'
+        }));
+
+        // 4. Append the image file (if it exists)
+        if (formData.image) {
+            data.append('image', formData.image);
         }
 
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('username', formData.username);
-        data.append('email', formData.email);
-        if (formData.password) data.append('password', formData.password);
-        data.append('role', formData.role);
-        data.append('bio', formData.bio);
-        if (formData.image) data.append('image', formData.image);
-
+        // 5. Send the FormData
         const success = await updateUser(id!, data);
 
         if (success) {

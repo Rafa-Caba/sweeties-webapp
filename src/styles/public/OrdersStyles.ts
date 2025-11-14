@@ -5,29 +5,41 @@ export const OrdersWrapper = styled.section`
     max-width: 900px;
     margin: auto;
 
+    @media (max-width: 1200px) {
+      padding: 9.5rem 1rem 4rem;
+      max-width: 700px;
+    }
+
     @media (max-width: 768px) {
-        padding: 8.5rem 1rem 2rem;
+      padding: 8.5rem 1rem 2rem;
     }
 `;
 
 export const OrdersTitle = styled.h2`
     font-size: 2.5rem;
     text-align: center;
+    padding-top: 2rem;
     margin-bottom: 2rem;
     color: ${({ theme }) => theme.colors.text};
 
     @media (max-width: 768px) {
         font-size: 1.8rem;
+        padding-top: 0.5rem;
     }
 `;
 
 export const OrderCardItem = styled.div`
-    background: ${({ theme }) => theme.colors.waveTop};
-    border: 1px solid #eee;
-    border-radius: 12px;
+  background: ${({ theme }) => theme.colors.waveTop};
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+
+  @media (max-width: 768px) {
+    width: 100%;
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
 `;
 
 export const OrderStatus = styled.p<{ status: string }>`
@@ -73,5 +85,17 @@ export const OrderCardWrapper = styled.div`
 
   &:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+`;
+
+export const OrderCardsContainer = styled.div`
+  gap: 1rem
+  margin-top: 3rem;
+  padding: 2rem 4rem;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 0 1rem;
+    flexDirection: column;
   }
 `;

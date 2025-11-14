@@ -1,28 +1,24 @@
 
 export interface User {
-    _id: string;
+    id: number;
     name: string;
     username: string;
     email: string;
-    password: string;
-    role: 'admin' | 'editor' | 'viewer' | 'guest';
+    role: 'ADMIN' | 'EDITOR' | 'VIEWER' | 'GUEST';
     bio?: string;
     imageUrl?: string;
     imagePublicId?: string;
-    createdAt: Date;
-    updatedAt: Date;
+    themeId?: number;
 }
 
 export const mapUserFromApi = (user: any): User => ({
-    _id: user._id,
+    id: user.id,
     name: user.name || '',
     username: user.username || '',
     email: user.email || '',
-    password: user.password || '',
-    role: user.role || 'guest',
+    role: (user.role || 'guest').toUpperCase(),
     bio: user.bio || '',
     imageUrl: user.imageUrl || '',
     imagePublicId: user.imagePublicId || '',
-    createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
-    updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
+    themeId: user.themeId,
 });

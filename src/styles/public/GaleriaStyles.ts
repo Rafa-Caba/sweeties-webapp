@@ -55,8 +55,10 @@ export const ItemsGrid = styled.div`
     margin: 0 2rem 3rem;
   }
 
-  @media (max-width: 760px) {
+  @media (max-width: 400px) {
     margin: 0 auto 3rem;
+    display: flex;
+    flex-direction: column;
   }
 
   z-index: 2;
@@ -82,7 +84,7 @@ export const GaleriaItemCard = styled.div`
 
 export const GaleriaItemImage = styled.img`
     width: 100%;
-    height: 120px;
+    height: 170px;
     object-fit: cover;
     border-radius: 0.5rem;
     margin-bottom: 0.5rem;

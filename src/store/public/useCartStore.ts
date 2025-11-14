@@ -8,11 +8,11 @@ import { showAddRemoveiTemToast } from '../../utils/untilsFunctions';
 interface CartState {
     items: CartItem[];
     addItem: (item: Omit<CartItem, 'quantity'>) => void;
-    removeItem: (id: string) => void;
+    removeItem: (id: number) => void;
     clearCart: () => void;
-    updateQuantity: (id: string, quantity: number) => void;
+    updateQuantity: (id: number, quantity: number) => void;
     getTotal: () => number;
-    getQuantityById: (id: string) => number;
+    getQuantityById: (id: number) => number;
 }
 
 export const useCartStore = create<CartState>()(

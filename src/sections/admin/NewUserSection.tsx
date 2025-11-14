@@ -73,8 +73,6 @@ export const NewUserSection = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log("clicking submit");
-
         if (!validateForm()) {
             Swal.fire({
                 icon: 'error',
@@ -84,15 +82,30 @@ export const NewUserSection = () => {
             return;
         }
 
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('username', formData.username);
-        data.append('email', formData.email);
-        data.append('password', formData.password);
-        data.append('role', formData.role);
-        data.append('bio', formData.bio);
-        if (formData.image) data.append('image', formData.image);
+        // 1. Create the DTO object that matches CreateUserDTO in Spring
+        const userDTO = {
+            name: formData.name,
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            bio: formData.bio
+        };
 
+        // 2. Create the FormData
+        const data = new FormData();
+
+        // 3. Append the DTO as a JSON string Blob
+        data.append('user', new Blob([JSON.stringify(userDTO)], {
+            type: 'application/json'
+        }));
+
+        // 4. Append the image file (if it exists)
+        if (formData.image) {
+            data.append('image', formData.image);
+        }
+
+        // 5. Send the FormData
         const success = await createUser(data);
 
         if (success) {

@@ -1,44 +1,61 @@
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { devtools, persist } from 'zustand/middleware';
 import type { Order } from '../../types/public/Order';
+import { trackOrder } from '../../services/public/orders';
 
 interface OrdersState {
     orders: Order[];
     loading: boolean;
-    fetchOrders: () => Promise<void>;
+    error: string | null;
+    
+    // Call this after successful checkout
+    addOrder: (order: Order) => void; 
+    
+    // Fetch updates for a specific order
+    fetchOrderDetails: (id: number) => Promise<void>;
 }
 
 export const useOrdersStore = create<OrdersState>()(
     devtools(
-        immer((set) => ({
-            orders: [],
-            loading: false,
+        persist(
+            (set, get) => ({
+                orders: [],
+                loading: false,
+                error: null,
 
-            fetchOrders: async () => {
-                try {
-                    set((state) => { state.loading = true });
+                addOrder: (order: Order) => {
+                    // Add new order to the top of the list
+                    set((state) => ({ 
+                        orders: [order, ...state.orders] 
+                    }));
+                },
 
-                    // Dummy for now (can later replace with `getOrders()` service call)
-                    const dummyOrders: Order[] = [
-                        {
-                            id: 'ORD-001',
-                            createdAt: '2025-08-06T12:00:00Z',
-                            status: 'pendiente',
-                            total: 150,
-                            items: [
-                                { id: '1', name: 'Muñeco Conejito', price: 50, quantity: 3 },
-                            ],
-                        },
-                    ];
+                fetchOrderDetails: async (id: number) => {
+                    set({ loading: true, error: null });
+                    try {
+                        // 1. Find the local order to get the email
+                        const localOrder = get().orders.find(o => o.id === id);
+                        
+                        if (!localOrder) {
+                            throw new Error("Orden no encontrada localmente");
+                        }
 
-                    set((state) => { state.orders = dummyOrders });
-                } catch (error) {
-                    console.error('Error loading orders:', error);
-                } finally {
-                    set((state) => { state.loading = false });
-                }
-            }
-        }))
+                        // 2. Call the secure endpoint with ID + Email
+                        const updatedOrder = await trackOrder(id, localOrder.email);
+                        
+                        // 3. Update state
+                        set((state) => ({
+                            orders: state.orders.map(o => o.id === id ? updatedOrder : o)
+                        }));
+                    } catch (error: any) {
+                        console.error('Error updating order status:', error);
+                        // Don't block the UI, just leave the old data
+                    } finally {
+                        set({ loading: false });
+                    }
+                },
+            }),
+            { name: 'public-orders-store' }
+        )
     )
 );

@@ -1,7 +1,7 @@
 import type { User } from "./users";
 
 export interface LoginPayload {
-    username: string;
+    email: string;
     password: string;
 }
 
@@ -10,8 +10,6 @@ export interface RegisterPayload {
     username: string;
     email: string;
     password: string;
-    bio: string;
-    image: File | null;
 }
 
 export interface LoginResponse {
@@ -23,6 +21,7 @@ export interface LoginResponse {
 
 export interface RefreshResponse {
     accessToken: string;
+    refreshToken: string;
 }
 
 export interface LogoutResponse {
@@ -34,6 +33,10 @@ export interface RegisterFormDataFields {
     username: string;
     email: string;
     password: string;
-    bio: string;
-    image: File | null;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  role: string;
 }

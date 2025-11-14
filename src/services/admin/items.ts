@@ -1,28 +1,28 @@
 
 import api from '../../api/axios.api';
-import type { Item } from '../../types';
+import type { ItemApi } from '../../types';
 
-export const adminGetItems = async (): Promise<Item[]> => {
-    const { data } = await api.get<Item[]>('/items');
+export const adminGetItems = async (): Promise<ItemApi[]> => {
+    const { data } = await api.get<ItemApi[]>('/items');
     return data;
 };
 
-export const adminGetItemById = async (id: string): Promise<Item> => {
-    const { data } = await api.get<Item>(`/items/${id}`);
+export const adminGetItemById = async (id: number): Promise<ItemApi> => {
+    const { data } = await api.get<ItemApi>(`/items/${id}`);
     return data;
 };
 
 // ⬇️ Accept FormData directly
-export const adminCreateItem = async (form: FormData): Promise<Item> => {
-    const { data } = await api.post<Item>('/items', form, {
+export const adminCreateItem = async (form: FormData): Promise<ItemApi> => {
+    const { data } = await api.post<ItemApi>('/items', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
 };
 
 // ⬇️ Accept FormData directly (partial updates OK)
-export const adminUpdateItem = async (id: string, form: FormData): Promise<Item> => {
-    const { data } = await api.put<Item>(`/items/${id}`, form, {
+export const adminUpdateItem = async (id: number, form: FormData): Promise<ItemApi> => {
+    const { data } = await api.put<ItemApi>(`/items/${id}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;

@@ -22,7 +22,7 @@ export const OrderCard = ({ order }: { order: Order }) => {
 
                     <OrderItemList>
                         {order.items.map(item => (
-                            <li key={item.id}>
+                            <li key={item.productId}>
                                 {item.quantity} x {item.name}
                             </li>
                         ))}

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const OrderWrapper = styled.section`
-    padding: 9rem 1rem;
+    padding: 9rem 6rem;
     max-width: 800px;
     margin: auto;
 
@@ -14,10 +14,13 @@ export const OrderWrapper = styled.section`
 export const OrderTitle = styled.h2`
     font-size: 2.5rem;
     text-align: center;
+    padding-top: 3rem;
     margin-bottom: 4rem;
 
     @media (max-width: 768px) {
         font-size: 1.2rem;
+        padding-top: 0;
+        margin: 1rem auto 4rem;
     }
 
     @media (max-width: 408px) {
@@ -25,14 +28,14 @@ export const OrderTitle = styled.h2`
     }
 `;
 
-export const OrderStatus = styled.p<{ status: string }>`
+export const OrderStatus = styled.p<{ $status: string }>`
     font-weight: bold;
     margin-bottom: 1rem;
 
-    color: ${({ status }) => {
-        if (status === 'pendiente') return '#e67e22';
-        if (status === 'enviado') return '#3498db';
-        if (status === 'entregado') return '#27ae60';
+    color: ${({ $status }) => {
+        if ($status === 'PENDIENTE') return '#e67e22';
+        if ($status === 'ENVIADO') return '#3498db';
+        if ($status === 'ENTREGADO') return '#27ae60';
         return '#333';
     }};
 `;

@@ -4,7 +4,7 @@ export const NewUserWrapper = styled.form`
   width: 75%;
   margin: 2rem auto;
   padding: 2rem;
-  // background-color: ${({ theme }) => theme.colors.cardBackground};
+  background-color: ${({ theme }) => theme.colors.cardBackground};
   border-radius: 1rem;
   box-shadow: ${({ theme }) => theme.colors.cardShadow};
   display: flex;

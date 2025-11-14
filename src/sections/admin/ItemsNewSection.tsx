@@ -1,4 +1,3 @@
-// /src/sections/admin/ItemsNewSection.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/admin/layout/AdminLayout';
@@ -90,32 +89,50 @@ export const NewItemSection = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name.trim() || !price || Number(price) <= 0) {
-            alert('Por favor completa nombre y un precio válido.');
+        if (!name.trim() || !price || Number(price) <= 0 || !imageFile) {
+            showErrorToast('Por favor completa nombre, precio, e imagen principal.');
             return;
         }
 
-        // normalize sizes: keep only numeric rows
+        // 1. Normalize sizes (your logic is correct)
         const normalizedSizes = sizes
             .filter((r) => r.alto !== '' && r.ancho !== '')
             .map((r) => ({ alto: Number(r.alto), ancho: Number(r.ancho) }));
 
         setSubmitting(true);
         try {
-            // Build FormData here (pattern you requested)
+            // 2. Create the DTO object that matches 'CreateItemDTO'
+            const itemDTO = {
+                name: name.trim(),
+                description: info.trim(), // 'info' from form maps to 'description'
+                price: Number(price),
+                isVisible: available,    // 'available' from form maps to 'isVisible'
+                materials: materials,
+                size: normalizedSizes,
+                // isFeatured is not in your form, defaults to false in Spring
+            };
+
+            // 3. Create the FormData
             const form = new FormData();
-            form.append('name', name.trim());
-            form.append('price', String(price));
-            form.append('info', info.trim());
-            form.append('available', String(available));
-            form.append('materials', JSON.stringify(materials));
-            form.append('size', JSON.stringify(normalizedSizes));
-            if (imageFile) form.append('image', imageFile);
-            spriteFiles.forEach((file) => form.append('sprites', file));
+
+            // 4. Append the DTO as a JSON Blob named "item"
+            form.append('item', new Blob([JSON.stringify(itemDTO)], {
+                type: 'application/json'
+            }));
+
+            // 5. Append the main image file named "image"
+            if (imageFile) {
+                form.append('image', imageFile);
+            }
+
+            // 6. Append all sprite files, each named "sprites"
+            spriteFiles.forEach((file) => {
+                form.append('sprites', file);
+            });
 
             const created = await createItem(form);
             if (created) {
-                showSuccessToast('El Item fue creado con exito.')
+                showSuccessToast('El Item fue creado con exito.');
                 navigate('/admin/items');
             } else {
                 showErrorToast('No se pudo crear el producto.');

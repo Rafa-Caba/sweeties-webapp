@@ -1,4 +1,3 @@
-// /src/sections/admin/EditItemSection.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminLayout } from '../../components/admin/layout/AdminLayout';
@@ -54,7 +53,7 @@ export const EditItemSection = () => {
     // Load item initially
     useEffect(() => {
         if (!id) return;
-        fetchItemById(id);
+        fetchItemById(Number(id));
         return () => {
             clearCurrentItem();
         };
@@ -155,9 +154,9 @@ export const EditItemSection = () => {
     // ----- Submit
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentItem?._id) return;
+        if (!currentItem?.id) return;
         if (!name.trim() || price === '' || Number(price) <= 0) {
-            alert('Por favor completa nombre y un precio válido.');
+            showErrorToast('Por favor completa nombre y un precio válido.');
             return;
         }
 
@@ -167,31 +166,47 @@ export const EditItemSection = () => {
 
         setSubmitting(true);
         try {
+            // 1. Create the DTO object that matches 'UpdateItemDTO'
+            const itemDTO = {
+                name: name.trim(),
+                description: info.trim(), // 'info' from form
+                price: Number(price),
+                isVisible: available,    // 'available' from form
+                materials: materials,
+                size: normalizedSizes,
+                // We must handle sprites differently
+            };
+            
+            // 2. Create the FormData
             const form = new FormData();
-            form.append('name', name.trim());
-            form.append('price', String(price));
-            form.append('info', info.trim());
-            form.append('available', String(available));
-            form.append('materials', JSON.stringify(materials));
-            form.append('size', JSON.stringify(normalizedSizes));
 
-            // main image
+            // 3. Append the DTO as a JSON Blob named "item"
+            form.append('item', new Blob([JSON.stringify(itemDTO)], {
+                type: 'application/json'
+            }));
+
+            // 4. Append the *new* main image (if one was selected)
             if (imageFile) {
                 form.append('image', imageFile);
-            } else if (existingImage) {
-                // lets backend know we're keeping the same
-                form.append('existingImage', existingImage);
             }
 
-            // sprites
-            if (existingSprites.length) {
-                form.append('existingSprites', JSON.stringify(existingSprites));
-            } else {
-                form.append('existingSprites', JSON.stringify([]));
-            }
-            spriteFiles.forEach((file) => form.append('sprites', file));
+            // 5. Append *new* sprites (if any were selected)
+            spriteFiles.forEach((file) => {
+                form.append('sprites', file);
+            });
+            
+            const revisedItemDTO = {
+                ...itemDTO,
 
-            const updated = await updateItem(currentItem._id, form);
+                sprites: spriteFiles.length > 0 ? null : existingSprites,
+            };
+
+            // Re-append the 'item' blob with the revised DTO
+            form.set('item', new Blob([JSON.stringify(revisedItemDTO)], {
+                type: 'application/json'
+            }));
+
+            const updated = await updateItem(currentItem.id, form);
             if (updated) {
                 showSuccessToast('El Item fue actualizado con éxito.');
                 navigate('/admin/items');

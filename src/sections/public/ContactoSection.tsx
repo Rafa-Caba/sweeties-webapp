@@ -1,24 +1,31 @@
 import { useState } from 'react';
 import {
     ContactoButton,
-    ContactoFileInput,
+    // ContactoFileInput, // Removed
     ContactoForm,
     ContactoInput,
     ContactoLabel,
     ContactoTextarea,
     ContactoTitle,
     ContactoWrapper,
-    FormGroup
+    FormGroup,
+    ContactoInfoBox, 
 } from '../../styles/public/ContactoStyles';
 import Swal from 'sweetalert2';
+import { usePublicSettingsStore } from '../../store/public/usePublicSettingsStore';
+import { sendContactForm, type ContactPayload } from '../../services/public/contact';
 
 export const ContactoSection = () => {
+    // Get the settings from the store
+    const { settings } = usePublicSettingsStore();    
+
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
+        name: '',
         subject: '',
         email: '',
         phone: '',
         content: '',
-        images: [] as File[],
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -26,18 +33,22 @@ export const ContactoSection = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setFormData((prev) => ({ ...prev, images: Array.from(e.target.files || []) }));
-        }
-    };
+    // REMOVED handleFileChange
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+
+        // Map frontend state to the backend DTO
+        const payload: ContactPayload = {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            message: formData.content,
+        };
 
         try {
-            // Simulate sending...
-            // await sendContactForm({ subject, email, phone, message });
+            await sendContactForm(payload);
 
             Swal.fire({
                 title: '🥰 ¡Gracias por tu mensaje!',
@@ -47,22 +58,77 @@ export const ContactoSection = () => {
                 confirmButtonColor: '#ef9ac5',
             });
 
-            // Clear fields if needed...
-        } catch (error) {
-            Swal.fire({
-                title: '¡Ups! Ocurrió un error',
-                text: 'Intenta de nuevo o comunícate por WhatsApp 💬',
-                icon: 'error',
-                confirmButtonText: 'Reintentar',
+            // Clear form on success
+            setFormData({
+                name: '',
+                subject: '',
+                email: '',
+                phone: '',
+                content: '',
             });
+
+        } catch (error: any) {
+            // Check for validation errors from the backend
+            if (error.response && error.response.status === 400) {
+                const errors = error.response.data.errors;
+                const errorMessages = Object.values(errors).join('<br/>');
+                Swal.fire({
+                    title: '¡Ups! Faltan datos',
+                    html: errorMessages,
+                    icon: 'error',
+                    confirmButtonText: 'Reintentar',
+                });
+            } else {
+                Swal.fire({
+                    title: '¡Ups! Ocurrió un error',
+                    text: 'Intenta de nuevo o comunícate por WhatsApp 💬',
+                    icon: 'error',
+                    confirmButtonText: 'Reintentar',
+                });
+            }
+        } finally {
+            setLoading(false);
         }
     };
+
+    // Fallback while settings load
+    if (!settings) return <div>Cargando...</div>;
 
     return (
         <ContactoWrapper>
             <ContactoTitle>Contáctanos</ContactoTitle>
 
+            {/* --- Dynamic Info Box --- */}
+            <ContactoInfoBox>
+                <p>¿Prefieres una atención más directa?</p>
+                {settings.visibility.showWhatsApp && settings.contactWhatsApp && (
+                    <a 
+                        href={`https://wa.me/${settings.contactWhatsApp.replace(/\D/g, '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="whatsapp-button"
+                    >
+                        💬 Chatea por WhatsApp
+                    </a>
+                )}
+                {settings.visibility.showEmail && settings.contactEmail && (
+                    <span>o escríbenos a: <strong>{settings.contactEmail}</strong></span>
+                )}
+            </ContactoInfoBox>
+            {/* ------------------------ */}
+
             <ContactoForm onSubmit={handleSubmit}>
+                <FormGroup>
+                    <ContactoLabel>Tu Nombre</ContactoLabel> {/* <-- ADDED */}
+                    <ContactoInput
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                    />
+                </FormGroup>
+                
                 <FormGroup>
                     <ContactoLabel>Título</ContactoLabel>
                     <ContactoInput
@@ -70,7 +136,6 @@ export const ContactoSection = () => {
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        required
                     />
                 </FormGroup>
 
@@ -86,7 +151,7 @@ export const ContactoSection = () => {
                 </FormGroup>
 
                 <FormGroup>
-                    <ContactoLabel>Número de Tel. o WhatsApp</ContactoLabel>
+                    <ContactoLabel>Número de Tel. o WhatsApp (Opcional)</ContactoLabel>
                     <ContactoInput
                         type="text"
                         name="phone"
@@ -96,7 +161,7 @@ export const ContactoSection = () => {
                 </FormGroup>
 
                 <FormGroup>
-                    <ContactoLabel>Contenido</ContactoLabel>
+                    <ContactoLabel>Mensaje</ContactoLabel>
                     <ContactoTextarea
                         name="content"
                         rows={5}
@@ -106,17 +171,21 @@ export const ContactoSection = () => {
                     />
                 </FormGroup>
 
-                <FormGroup>
-                    <ContactoLabel>Adjuntar imágenes</ContactoLabel>
-                    <ContactoFileInput
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileChange}
-                    />
-                </FormGroup>
+                {/* 
+                    <FormGroup>
+                        <ContactoLabel>Adjuntar imágenes</ContactoLabel>
+                        <ContactoFileInput
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleFileChange}
+                        />
+                    </FormGroup>
+                */}
 
-                <ContactoButton type="submit">Enviar mensaje</ContactoButton>
+                <ContactoButton type="submit" disabled={loading}>
+                    {loading ? 'Enviando...' : 'Enviar mensaje'}
+                </ContactoButton>
             </ContactoForm>
         </ContactoWrapper>
     );

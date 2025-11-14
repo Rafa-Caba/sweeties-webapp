@@ -47,11 +47,13 @@ export const FormSelect = styled.select`
 `;
 
 export const ImagePreview = styled.img`
-  width: 175px;
-  height: 175px;
+  width: 200px;
+  height: 200px;
   object-fit: cover;
   border-radius: 8px;
-  margin-top: 0.5rem;
+  margin: 1rem;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 export const UploadLabel = styled.label`

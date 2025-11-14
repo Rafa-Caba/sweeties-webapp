@@ -1,9 +1,10 @@
 import rawAxios from "./rawAxios";
 import type {
     LoginPayload,
-    LoginResponse,
+    AuthResponse,
     LogoutResponse,
     RefreshResponse,
+    RegisterPayload,
     User,
 } from '../../types';
 import api from "../../api/axios.api";
@@ -12,7 +13,7 @@ import api from "../../api/axios.api";
 export const refreshToken = async (refreshToken: string): Promise<RefreshResponse | null> => {
     try {
         const { data } = await rawAxios.post<RefreshResponse>('/auth/refresh', {
-            token: refreshToken,
+            refreshToken: refreshToken,
         });
         return data;
     } catch (error: any) {
@@ -23,29 +24,28 @@ export const refreshToken = async (refreshToken: string): Promise<RefreshRespons
 
 // ✅ GET /users/profile (needs token)
 export const getUserProfile = async (): Promise<User> => {
-    const { data } = await api.get<User>('/users/profile');
+    const { data } = await api.get<User>('/users/me');
     return data;
 };
 
 // ✅ POST /auth/login
-export const loginUser = async (payload: LoginPayload): Promise<LoginResponse> => {
-    const { data } = await api.post<LoginResponse>('/auth/login', payload);
+export const loginUser = async (payload: LoginPayload): Promise<AuthResponse> => {
+    const { data } = await api.post<AuthResponse>('/auth/login', payload);
     return data;
 };
 
 // ✅ POST /auth/register (with FormData and image)
-export const registerUser = async (formData: FormData): Promise<User> => {
-    const { data } = await rawAxios.post<User>('/auth/register', formData);
+export const registerUser = async (payload: RegisterPayload): Promise<AuthResponse> => {
+    const { data } = await rawAxios.post<AuthResponse>('/auth/register', payload);
     return data;
 };
 
 // ✅ POST /auth/logout (with refresh token)
 export const logoutUser = async (refreshToken: string): Promise<LogoutResponse> => {
-    const { data } = await api.delete<LogoutResponse>('/auth/logout', {
-        data: { token: refreshToken },
+    const { data } = await api.post<LogoutResponse>('/auth/logout', { 
+        refreshToken: refreshToken,
     });
     return data;
 };
-
 
 

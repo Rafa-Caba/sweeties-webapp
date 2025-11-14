@@ -1,9 +1,8 @@
-// types/items.ts
+// This interface matches the Spring Boot 'ItemDTO.java'
 export interface ItemApi {
-    _id: string;
+    id: number;
     name: string;
-    description?: string;
-    info?: string;
+    description: string;
     price: number;
     imageUrl: string;
     imagePublicId?: string;
@@ -11,15 +10,15 @@ export interface ItemApi {
     size?: { alto: number; ancho: number }[];
     sprites?: string[];
     spritesPublicIds?: string[];
-    isFeatured?: boolean;
-    isVisible?: boolean;
-    available?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
+    isFeatured: boolean;
+    isVisible: boolean;
+    info: string;
+    available: boolean;
 }
 
+// This is the clean type your frontend components will use
 export interface Item {
-    _id: string;
+    id: number;
     name: string;
     price: number;
     imageUrl: string;
@@ -30,14 +29,13 @@ export interface Item {
     available: boolean;
     imagePublicId?: string;
     spritesPublicIds?: string[];
-    isFeatured?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
+    isFeatured: boolean;
 }
 
+// This mapper translates the DTO to your internal type
 export function mapItemFromApi(api: ItemApi): Item {
     return {
-        _id: api._id,
+        id: api.id,
         name: api.name,
         price: api.price,
         imageUrl: api.imageUrl,
@@ -45,14 +43,9 @@ export function mapItemFromApi(api: ItemApi): Item {
         materials: api.materials ?? [],
         size: api.size ?? [],
         sprites: api.sprites ?? [],
-        available:
-            typeof api.available === 'boolean'
-                ? api.available
-                : (typeof api.isVisible === 'boolean' ? api.isVisible : true),
+        available: api.available ?? api.isVisible ?? true,
         imagePublicId: api.imagePublicId,
         spritesPublicIds: api.spritesPublicIds,
-        isFeatured: api.isFeatured,
-        createdAt: api.createdAt,
-        updatedAt: api.updatedAt,
+        isFeatured: api.isFeatured ?? false,
     };
 }

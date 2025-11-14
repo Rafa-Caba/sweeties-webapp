@@ -32,7 +32,7 @@ export const ItemSection = () => {
     const [modalIndex, setModalIndex] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(0);
 
-    const item = publicItems.find((it) => it._id === id);
+    const item = publicItems.find((it) => it.id === Number(id));
     const allImages = item ? [item.imageUrl, ...(item.sprites || [])] : [];
 
     // scroll to top once
@@ -46,9 +46,9 @@ export const ItemSection = () => {
             setQuantity(0);
             return;
         }
-        setQuantity(getQuantityById(item._id));
+        setQuantity(getQuantityById(item.id));
         // depends on cart changes & item id
-    }, [item?._id, item, items, getQuantityById]);
+    }, [item?.id, item, items, getQuantityById]);
 
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -114,9 +114,9 @@ export const ItemSection = () => {
                                 <ItemButton
                                     onClick={() => {
                                         if (quantity > 1) {
-                                            updateQuantity(item._id, quantity - 1);
+                                            updateQuantity(item.id, quantity - 1);
                                         } else {
-                                            removeItem(item._id);
+                                            removeItem(item.id);
                                         }
                                     }}
                                 >
@@ -130,7 +130,7 @@ export const ItemSection = () => {
                                 <ItemButton
                                     onClick={() =>
                                         addItem({
-                                            id: item._id,
+                                            id: item.id,
                                             name: item.name,
                                             imageUrl: item.imageUrl,
                                             price: item.price,
@@ -144,7 +144,7 @@ export const ItemSection = () => {
                             <ItemButton
                                 onClick={() =>
                                     addItem({
-                                        id: item._id,
+                                        id: item.id,
                                         name: item.name,
                                         imageUrl: item.imageUrl,
                                         price: item.price,

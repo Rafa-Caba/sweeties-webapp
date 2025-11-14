@@ -83,11 +83,11 @@ export const UsersSection = () => {
                 {!loading && !error && users.length > 0 && (
                     <UsersGrid>
                         {users.map((user) => (
-                            <div key={user._id}>
+                            <div key={user.id}>
                                 <UserCard
                                     user={user}
-                                    onDelete={() => handleDelete(user._id)}
-                                    onEdit={() => handleEdit(user._id)}
+                                    onDelete={() => handleDelete(user.id.toString())} 
+                                    onEdit={() => handleEdit(user.id.toString())}
                                 />
                             </div>
                         ))}

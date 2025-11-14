@@ -1,4 +1,3 @@
-// /src/sections/admin/ItemsSection.tsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/admin/layout/AdminLayout';
@@ -118,7 +117,8 @@ export const ItemsSection = () => {
 				{!loading && !error && items.length > 0 && (
 					<ItemsGrid>
 						{items.map((item) => (
-							<ItemCard key={item._id}>
+							// 1. Use item.id for the key
+							<ItemCard key={item.id}>
 								<ItemImageWrap>
 									<ItemImage src={item.imageUrl} alt={item.name} />
 									<PriceTag>${item.price}</PriceTag>
@@ -131,12 +131,14 @@ export const ItemsSection = () => {
 									<ItemName title={item.name}>{item.name}</ItemName>
 									<ItemMeta>
 										<span>ID:</span>
-										<code>{item._id}</code>
+										{/* 2. Display the correct ID */}
+										<code>{item.id}</code>
 									</ItemMeta>
 
 									<ItemActions>
-										<button onClick={() => handleEdit(item._id)}>Editar</button>
-										<button className="danger" onClick={() => handleDelete(item._id)}>
+										{/* 3. Pass the ID as a string */}
+										<button onClick={() => handleEdit(item.id.toString())}>Editar</button>
+										<button className="danger" onClick={() => handleDelete(item.id.toString())}>
 											Eliminar
 										</button>
 									</ItemActions>

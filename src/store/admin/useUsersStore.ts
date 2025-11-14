@@ -78,14 +78,17 @@ export const useUsersStore = create<AdminUsersState>()(
                     }
                 },
 
-                updateUser: async (id, form) => {
+                updateUser: async (id: string, form: FormData) => {
                     set({ error: null });
                     try {
                         const updated = await adminUpdateUser(id, form);
+                        const mappedUser = mapUserFromApi(updated); // <-- Map the response
                         set({
-                            users: get().users.map((u) => (u._id === id ? updated : u)),
+                            users: get().users.map((u) => (u.id === mappedUser.id ? mappedUser : u)),
                         });
-                        return updated;
+
+                        return mappedUser;
+
                     } catch (e: any) {
                         set({ error: e?.message || 'Error updating user' });
                         return null;
@@ -96,8 +99,10 @@ export const useUsersStore = create<AdminUsersState>()(
                     set({ error: null });
                     try {
                         await adminDeleteUserById(id);
-                        set({ users: get().users.filter((u) => u._id !== id) });
+                        set({ users: get().users.filter((u) => u.id !== Number(id)) }); // <-- FIX
+                        
                         return true;
+
                     } catch (e: any) {
                         set({ error: e?.message || 'Error deleting user' });
                         return false;

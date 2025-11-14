@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/public/useCartStore';
+import { useOrdersStore } from '../../store/public/useOrdersStore'; // <-- Import Orders Store
 import { sendOrder } from '../../services/public/checkout';
 import {
     CheckoutWrapper,
@@ -14,14 +15,17 @@ import {
 } from '../../styles/public/CheckoutStyles';
 
 export const CheckoutSection = () => {
-    const { items, getTotal, clearCart } = useCartStore();
     const navigate = useNavigate();
+    const { items, getTotal, clearCart } = useCartStore();
+    const { addOrder } = useOrdersStore();
+    
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
         note: '',
     });
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({
@@ -38,12 +42,34 @@ export const CheckoutSection = () => {
             return;
         }
 
+        setLoading(true);
         try {
-            await sendOrder({
+            // 1. Prepare the payload for the backend
+            const payload = {
                 ...formData,
-                items,
                 total: getTotal(),
-            });
+                items: items.map(item => ({
+                    productId: item.id.toString(),
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                }))
+            };
+
+            // 2. Send to backend
+            const response = await sendOrder(payload);
+
+            // 3. Save to Local History (Important for Guest tracking!)
+            const localOrder = {
+                id: response.orderId,
+                ...formData,
+                total: getTotal(),
+                status: 'PENDIENTE' as const,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                items: payload.items 
+            };
+            addOrder(localOrder);
 
             Swal.fire({
                 icon: 'success',
@@ -53,9 +79,12 @@ export const CheckoutSection = () => {
             });
 
             clearCart();
-            navigate('/');
-        } catch (error) {
+            navigate('/ordenes'); // Redirect to the "My Orders" page we built!
+        } catch (error: any) {
+            console.error(error);
             Swal.fire('Error', 'Hubo un problema al enviar tu pedido. Intenta más tarde.', 'error');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -110,7 +139,9 @@ export const CheckoutSection = () => {
                     />
                 </InputGroup>
 
-                <SubmitButton type="submit">Enviar pedido 🧵</SubmitButton>
+                <SubmitButton type="submit" disabled={loading}>
+                    {loading ? 'Enviando...' : 'Enviar pedido 🧵'}
+                </SubmitButton>
             </CheckoutForm>
         </CheckoutWrapper>
     );

@@ -17,11 +17,11 @@ interface AdminItemsState {
     error: string | null;
 
     fetchItems: () => Promise<void>;
-    fetchItemById: (id: string) => Promise<void>
+    fetchItemById: (id: number) => Promise<void>
     clearCurrentItem: () => void;
 
     createItem: (form: FormData) => Promise<Item | null>;
-    updateItem: (id: string, form: FormData) => Promise<Item | null>;
+    updateItem: (id: number, form: FormData) => Promise<Item | null>;
     deleteItem: (id: string) => Promise<boolean>;
 }
 
@@ -64,8 +64,15 @@ export const useAdminItemsStore = create<AdminItemsState>()(
                 createItem: async (form) => {
                     set({ error: null });
                     try {
-                        const created = await adminCreateItem(form);
+                        const createdApi = await adminCreateItem(form); // 1. Get the raw API response
+                        if (!createdApi) return null; // Handle null/undefined case
+
+                        // 2. Map the raw API data to your clean Item type
+                        const created = mapItemFromApi(createdApi); 
+
+                        // 3. Add the *mapped* object to the state
                         set({ items: [created, ...get().items] });
+                        
                         return created;
                     } catch (e: any) {
                         set({ error: e?.message || 'Error al crear item' });
@@ -76,8 +83,11 @@ export const useAdminItemsStore = create<AdminItemsState>()(
                 updateItem: async (id, form) => {
                     set({ error: null });
                     try {
-                        const updated = await adminUpdateItem(id, form);
-                        set({ items: get().items.map((it) => (it._id === id ? updated : it)) });
+                        const updatedApi = await adminUpdateItem(id, form);
+                        const updated = mapItemFromApi(updatedApi);
+                        set({
+                            items: get().items.map((it) => (it.id === updated.id ? updated : it)),
+                        });
                         return updated;
                     } catch (e: any) {
                         set({ error: e?.message || 'Error al actualizar item' });
@@ -89,7 +99,8 @@ export const useAdminItemsStore = create<AdminItemsState>()(
                     set({ error: null });
                     try {
                         await adminDeleteItem(id);
-                        set({ items: get().items.filter((it) => it._id !== id) });
+                        // Compare number to string, so we must convert
+                        set({ items: get().items.filter((it) => it.id !== Number(id)) });
                         return true;
                     } catch (e: any) {
                         set({ error: e?.message || 'Error al eliminar item' });

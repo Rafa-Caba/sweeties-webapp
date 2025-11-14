@@ -65,10 +65,10 @@ export const AdminNavbar = () => {
     const mobileLinks = [
         { to: '/admin/my-profile', label: 'Mi Perfil' },
         { to: '/admin', label: 'Dashboard' },
-        { to: '/admin/items', label: 'Items' },
-        { to: '/admin/users', label: 'Users' },
-        { to: '/admin/public-settings', label: 'Public Settings' },
-        { to: '/admin/admin-settings', label: 'Admin Settings' },
+        { to: '/admin/items', label: 'Artículos' },
+        { to: '/admin/users', label: 'Usuarios' },
+        { to: '/admin/orders', label: 'Órdenes' },
+        { to: '/admin/admin-settings', label: 'Ajustes de Administración' },
     ];
 
     return (
@@ -110,7 +110,7 @@ export const AdminNavbar = () => {
                         </Link>
                         {!isMobile && (
                             <Link to="/admin/admin-settings" onClick={closeMenu}>
-                                Admin Settings
+                                Ajustes de Administración
                             </Link>
                         )}
                         <button type="button" onClick={handleLogout}>
