@@ -306,10 +306,30 @@ export const SettingsSection = () => {
                         <FormSection>
                             <SectionTitle>Redes Sociales</SectionTitle>
                             <GridTwo>
-                                <InputField label="Facebook URL" value={formData.social.facebook ?? ''} onChange={(v: string) => handleNestedChange('social', 'facebook', v)} disabled={!isEditing} />
-                                <InputField label="Instagram URL" value={formData.social.instagram ?? ''} onChange={(v: string) => handleNestedChange('social', 'instagram', v)} disabled={!isEditing} />
-                                <InputField label="TikTok URL" value={formData.social.tiktok ?? ''} onChange={(v: string) => handleNestedChange('social', 'tiktok', v)} disabled={!isEditing} />
-                                <InputField label="YouTube URL" value={formData.social.youtube ?? ''} onChange={(v: string) => handleNestedChange('social', 'youtube', v)} disabled={!isEditing} />
+                                <InputField 
+                                    label="Facebook URL" 
+                                    value={formData.social?.facebook ?? ''} 
+                                    onChange={(v: string) => handleNestedChange('social', 'facebook', v)} 
+                                    disabled={!isEditing} 
+                                />
+                                <InputField 
+                                    label="Instagram URL" 
+                                    value={formData.social?.instagram ?? ''} 
+                                    onChange={(v: string) => handleNestedChange('social', 'instagram', v)} 
+                                    disabled={!isEditing} 
+                                />
+                                <InputField 
+                                    label="TikTok URL" 
+                                    value={formData.social?.tiktok ?? ''} 
+                                    onChange={(v: string) => handleNestedChange('social', 'tiktok', v)} 
+                                    disabled={!isEditing} 
+                                />
+                                <InputField 
+                                    label="YouTube URL" 
+                                    value={formData.social?.youtube ?? ''} 
+                                    onChange={(v: string) => handleNestedChange('social', 'youtube', v)} 
+                                    disabled={!isEditing} 
+                                />
                             </GridTwo>
                         </FormSection>
                     )}

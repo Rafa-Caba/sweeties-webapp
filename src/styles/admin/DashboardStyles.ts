@@ -46,7 +46,7 @@ export const SectionHeader = styled.header`
     display: flex;
     justify-content: space-between;
     align-items: end;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 
     h1 {
         margin: 0;
@@ -63,7 +63,8 @@ export const SectionHeader = styled.header`
     @media (max-width: 768px) {
         justify-content: center;
         align-items: center;
-        margin-top: 1.8rem;
+        margin-top: 2.2rem;
+        flex-direction: column;
 
         h1, p {
             text-align: center;

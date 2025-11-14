@@ -4,6 +4,10 @@ export const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   gap: .5rem;
+
+  @media (max-width: 786px) {
+    margin-top: 1rem;
+  }
 `;
 
 export const NewItemBtn = styled.button`

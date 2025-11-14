@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/admin/layout/AdminLayout';
 import { useAuthStore } from '../../store/admin/useAuthStore';
 import { SectionBody, SectionHeader } from '../../styles/admin/DashboardStyles';
-import { GhostBtn } from '../../styles/admin/ItemsFormStyles'; // Import GhostBtn
+import { GhostBtn, LoaderCard, LoadingOverlay, Spinner } from '../../styles/admin/ItemsFormStyles'; // Import GhostBtn
 import { ErrorMessage, FormGroup, FormInput, FormLabel, FormTextarea, ImagePreview, ProfileWrapper, SubmitButton, UploadLabel } from '../../styles/admin/ProfileStyles';
 import { showErrorToast, showSuccessToast } from '../../utils/showToast';
 
@@ -14,6 +14,8 @@ interface Props {
 export const EditProfileSection = ({ onCancel }: Props) => { // Accept the prop
     const { user, updateProfile, loading } = useAuthStore();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [submitting, setSubmitting] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         username: '',
@@ -77,6 +79,8 @@ export const EditProfileSection = ({ onCancel }: Props) => { // Accept the prop
             return;
         }
 
+        setSubmitting(true);
+
         // 1. Create the DTO (this matches the UpdateUserDTO)
         // We DON'T send 'role' here, as users can't change their own role
         const userDTO = {
@@ -102,7 +106,7 @@ export const EditProfileSection = ({ onCancel }: Props) => { // Accept the prop
 
         if (updatedUser) {
             showSuccessToast('Perfil actualizado con éxito');
-            onCancel(); // <-- SWITCH BACK TO VIEW MODE ON SUCCESS
+            onCancel();
         }
     };
 
@@ -173,11 +177,18 @@ export const EditProfileSection = ({ onCancel }: Props) => { // Accept the prop
                             Cancelar
                         </GhostBtn>
                         <SubmitButton type="submit" disabled={loading}>
-                            {loading ? 'Guardando...' : 'Guardar Cambios'}
+                            {submitting ? 'Guardando…' : 'Guardar Cambios'}
                         </SubmitButton>
                     </div>
                 </ProfileWrapper>
             </SectionBody>
+
+            <LoadingOverlay $active={submitting}>
+                <LoaderCard>
+                    <Spinner />
+                    <div>Guardando…</div>
+                </LoaderCard>
+            </LoadingOverlay>
         </AdminLayout>
     );
 };

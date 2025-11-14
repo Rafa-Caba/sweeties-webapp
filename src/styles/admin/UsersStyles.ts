@@ -111,7 +111,7 @@ export const UserCardWrapper = styled.div`
   }
 
   @media (max-width: 1280px) {
-    margin-left: 1rem;
+    // margin-left: 1rem;
   }
 `;
 

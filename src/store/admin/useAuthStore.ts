@@ -4,8 +4,8 @@ import { devtools, persist } from 'zustand/middleware';
 import { getUserProfile, loginUser, logoutUser, refreshToken, registerUser } from '../../services/admin/auth';
 import { type LoginPayload, type User, type RegisterPayload, mapUserFromApi } from '../../types';
 import { showErrorToast } from '../../utils/showToast';
-import { adminUpdateUser } from '../../services/admin/users';
 import { updateMyTheme } from '../../services/admin/themes';
+import { useUsersStore } from './useUsersStore';
 
 interface AuthState {
     user: User | null;
@@ -145,12 +145,21 @@ export const useAuthStore = create<AuthState>()(
 
                     set({ loading: true });
                     try {
-                        // We re-use the existing adminUpdateUser service
-                        const updatedApiUser = await adminUpdateUser(user.id.toString(), payload);
-                        const updatedUser = mapUserFromApi(updatedApiUser);
+                        // 2. Get the updateUser action from the *other* store
+                        const { updateUser } = useUsersStore.getState();
 
-                        set({ user: updatedUser, loading: false }); // <-- Update the user in the store
-                        return updatedUser;
+                        // 3. Call the action. This will:
+                        //    a) Call the API
+                        //    b) Update the list in useUsersStore
+                        const updatedUser = await updateUser(user.id.toString(), payload);
+
+                        if (updatedUser) {
+                            // 4. Update *this* store's user object as well
+                            set({ user: updatedUser, loading: false }); 
+                            return updatedUser;
+                        } else {
+                            throw new Error('Update failed');
+                        }
                     } catch (err: any) {
                         showErrorToast(err.response?.data?.message || 'Error al actualizar el perfil.');
                         set({ loading: false });
