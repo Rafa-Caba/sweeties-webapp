@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Modal } from 'react-bootstrap';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 import {
     ItemWrapper,
     ItemTitle,
@@ -16,39 +16,66 @@ import {
     MainImageCard,
     InfoSizeList,
     InfoMaterialsList,
-} from '../../styles/public/ItemStyles';
-import { FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa';
-import { useCartStore } from '../../store/public/useCartStore';
-import { useItemsStore } from '../../store/public/useItemsStore';
+} from "../../styles/public/ItemStyles";
+import { FaMinus, FaPlus, FaShoppingCart } from "react-icons/fa";
+import { useCartStore } from "../../store/public/useCartStore";
+import { useItemsStore } from "../../store/public/useItemsStore";
+import type { ItemApi } from "../../types";
+
+// Narrow helpers to safely read optional fields when list type is "Item" (clean)
+type AnyItem = any;
+
+function toStringId(v: unknown): string {
+    return typeof v === "string" ? v : String(v ?? "");
+}
+
+function safeArray<T>(v: unknown): T[] {
+    return Array.isArray(v) ? (v as T[]) : [];
+}
+
+function isNonEmptyString(v: unknown): v is string {
+    return typeof v === "string" && v.trim().length > 0;
+}
 
 export const ItemSection = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const { items, getQuantityById, addItem, removeItem, updateQuantity } = useCartStore();
+    const { items: cartItems, getQuantityById, addItem, removeItem, updateQuantity } = useCartStore();
     const { items: publicItems } = useItemsStore();
 
     const [showModal, setShowModal] = useState(false);
     const [modalIndex, setModalIndex] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(0);
 
-    const item = publicItems.find((it) => it.id === Number(id));
-    const allImages = item ? [item.imageUrl, ...(item.sprites || [])] : [];
+    // Find by string id (backend uses string ids)
+    const item = useMemo(() => {
+        const targetId = toStringId(id);
+        return publicItems.find((it: AnyItem) => toStringId(it?.id) === targetId) as AnyItem | undefined;
+    }, [publicItems, id]);
+
+    const itemId = toStringId(item?.id);
+
+    // Images: main + sprites (null-safe)
+    const allImages = useMemo(() => {
+        const main = isNonEmptyString(item?.imageUrl) ? [String(item.imageUrl)] : [];
+        const sprites = safeArray<string>(item?.sprites).filter(isNonEmptyString);
+        return [...main, ...sprites];
+    }, [item]);
 
     // scroll to top once
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
     // keep quantity in sync with cart
     useEffect(() => {
-        if (!item) {
+        if (!itemId) {
             setQuantity(0);
             return;
         }
-        setQuantity(getQuantityById(item.id));
-        // depends on cart changes & item id
-    }, [item?.id, item, items, getQuantityById]);
+        setQuantity(getQuantityById(itemId));
+    }, [itemId, cartItems, getQuantityById]);
 
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -76,80 +103,100 @@ export const ItemSection = () => {
         }
     };
 
+    const name = (item?.name ?? "").toString();
+    const price = typeof item?.price === "number" ? item.price : Number(item?.price ?? 0);
+    const imageUrl = (item?.imageUrl ?? "").toString();
+
+    const infoText = (item?.info ?? item?.description ?? "").toString();
+    const materials = safeArray<string>(item?.materials);
+    const sizes = safeArray<ItemApi["size"][number]>(item?.size);
+
+    const canRenderMainImage = isNonEmptyString(imageUrl);
+
     return (
         <ItemWrapper>
             {!item ? (
                 <>
                     <ItemTitle>Item no encontrado</ItemTitle>
-                    <ItemButton onClick={() => handleNavigate('/galeria')}>Volver</ItemButton>
+                    <ItemButton onClick={() => handleNavigate("/galeria")}>Volver</ItemButton>
                 </>
             ) : (
                 <>
-                    <ItemTitle>{item.name}</ItemTitle>
+                    <ItemTitle>{name}</ItemTitle>
 
                     <MainImageCard>
-                        <MainImage
-                            src={item.imageUrl}
-                            alt={item.name}
-                            onClick={() => openModal(0)}
-                            role="button"
-                        />
-                    </MainImageCard>
-
-                    <ThumbnailsWrapper>
-                        {item.sprites.map((src, index) => (
-                            <Thumbnail
-                                key={index}
-                                src={src}
-                                alt={`Vista ${index + 1}`}
-                                onClick={() => openModal(index + 1)}
+                        {canRenderMainImage ? (
+                            <MainImage
+                                src={imageUrl}
+                                alt={name}
+                                onClick={() => openModal(0)}
                                 role="button"
                             />
-                        ))}
-                    </ThumbnailsWrapper>
+                        ) : (
+                            <div style={{ padding: "2rem", textAlign: "center" }}>
+                                No hay imagen disponible
+                            </div>
+                        )}
+                    </MainImageCard>
+
+                    {allImages.length > 1 && (
+                        <ThumbnailsWrapper>
+                            {/* Skip first because it's main image */}
+                            {allImages.slice(1).map((src, index) => (
+                                <Thumbnail
+                                    key={`${src}-${index}`}
+                                    src={src}
+                                    alt={`Vista ${index + 2}`}
+                                    onClick={() => openModal(index + 1)}
+                                    role="button"
+                                />
+                            ))}
+                        </ThumbnailsWrapper>
+                    )}
 
                     <ItemInfoWrapper>
                         {quantity > 0 ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <ItemButton
                                     onClick={() => {
+                                        if (!itemId) return;
                                         if (quantity > 1) {
-                                            updateQuantity(item.id, quantity - 1);
+                                            updateQuantity(itemId, quantity - 1);
                                         } else {
-                                            removeItem(item.id);
+                                            removeItem(itemId);
                                         }
                                     }}
                                 >
                                     <FaMinus />
                                 </ItemButton>
 
-                                <span style={{ minWidth: '2rem', textAlign: 'center' }}>
-                                    {quantity}
-                                </span>
+                                <span style={{ minWidth: "2rem", textAlign: "center" }}>{quantity}</span>
 
                                 <ItemButton
-                                    onClick={() =>
+                                    onClick={() => {
+                                        if (!itemId) return;
                                         addItem({
-                                            id: item.id,
-                                            name: item.name,
-                                            imageUrl: item.imageUrl,
-                                            price: item.price,
-                                        })
-                                    }
+                                            id: itemId,
+                                            name,
+                                            imageUrl,
+                                            price,
+                                        });
+                                    }}
                                 >
                                     <FaPlus />
                                 </ItemButton>
                             </div>
                         ) : (
                             <ItemButton
-                                onClick={() =>
+                                onClick={() => {
+                                    if (!itemId) return;
                                     addItem({
-                                        id: item.id,
-                                        name: item.name,
-                                        imageUrl: item.imageUrl,
-                                        price: item.price,
-                                    })
-                                }
+                                        id: itemId,
+                                        name,
+                                        imageUrl,
+                                        price,
+                                    });
+                                }}
                             >
                                 <FaPlus /> <FaShoppingCart />
                             </ItemButton>
@@ -157,32 +204,40 @@ export const ItemSection = () => {
 
                         <ItemInfo>
                             <InfoTitle>Información de Artículo</InfoTitle>
-                            <InfoText>{item.info}</InfoText>
+                            <InfoText>{infoText || "Sin información adicional."}</InfoText>
                         </ItemInfo>
 
                         <ItemMaterialsSizes>
                             <div>
                                 <InfoTitle>Materiales</InfoTitle>
-                                <InfoMaterialsList>
-                                    {item.materials.map((mat, index) => (
-                                        <li key={index}>{mat}</li>
-                                    ))}
-                                </InfoMaterialsList>
+                                {materials.length > 0 ? (
+                                    <InfoMaterialsList>
+                                        {materials.map((mat, index) => (
+                                            <li key={`${mat}-${index}`}>{mat}</li>
+                                        ))}
+                                    </InfoMaterialsList>
+                                ) : (
+                                    <InfoText>Sin materiales especificados.</InfoText>
+                                )}
                             </div>
 
                             <div>
                                 <InfoTitle>Medidas</InfoTitle>
-                                <InfoSizeList>
-                                    {item.size.map((dim, index) => (
-                                        <li key={index}>
-                                            Alto: {dim.alto} cm / Ancho: {dim.ancho} cm
-                                        </li>
-                                    ))}
-                                </InfoSizeList>
+                                {sizes.length > 0 ? (
+                                    <InfoSizeList>
+                                        {sizes.map((dim, index) => (
+                                            <li key={index}>
+                                                Alto: {dim?.alto ?? "—"} cm / Ancho: {dim?.ancho ?? "—"} cm
+                                            </li>
+                                        ))}
+                                    </InfoSizeList>
+                                ) : (
+                                    <InfoText>Sin medidas especificadas.</InfoText>
+                                )}
                             </div>
                         </ItemMaterialsSizes>
 
-                        <ItemButton onClick={() => handleNavigate('/galeria')}>Volver</ItemButton>
+                        <ItemButton onClick={() => handleNavigate("/galeria")}>Volver</ItemButton>
                     </ItemInfoWrapper>
 
                     <Modal
@@ -199,38 +254,38 @@ export const ItemSection = () => {
                                         src={allImages[modalIndex]}
                                         alt={`Imagen ${modalIndex + 1}`}
                                         style={{
-                                            maxWidth: '100%',
-                                            maxHeight: '70vh',
-                                            borderRadius: '12px',
-                                            boxShadow: '0 0 25px rgba(0,0,0,0.3)',
+                                            maxWidth: "100%",
+                                            maxHeight: "70vh",
+                                            borderRadius: "12px",
+                                            boxShadow: "0 0 25px rgba(0,0,0,0.3)",
                                         }}
                                     />
 
                                     <p
                                         style={{
-                                            marginTop: '1rem',
-                                            fontWeight: 'bold',
-                                            fontSize: '1rem',
-                                            color: '#fff',
-                                            textShadow: '1px 1px 2px #000',
+                                            marginTop: "1rem",
+                                            fontWeight: "bold",
+                                            fontSize: "1rem",
+                                            color: "#fff",
+                                            textShadow: "1px 1px 2px #000",
                                         }}
                                     >
-                                        {item.name} — Vista {modalIndex + 1} de {allImages.length}
+                                        {name} — Vista {modalIndex + 1} de {allImages.length}
                                     </p>
 
                                     <button
                                         onClick={prevImage}
                                         style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '1rem',
-                                            transform: 'translateY(-50%)',
-                                            fontSize: '2rem',
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#fff',
-                                            textShadow: '0 0 5px black',
-                                            cursor: 'pointer',
+                                            position: "absolute",
+                                            top: "50%",
+                                            left: "1rem",
+                                            transform: "translateY(-50%)",
+                                            fontSize: "2rem",
+                                            background: "none",
+                                            border: "none",
+                                            color: "#fff",
+                                            textShadow: "0 0 5px black",
+                                            cursor: "pointer",
                                         }}
                                     >
                                         ‹
@@ -239,16 +294,16 @@ export const ItemSection = () => {
                                     <button
                                         onClick={nextImage}
                                         style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            right: '1rem',
-                                            transform: 'translateY(-50%)',
-                                            fontSize: '2rem',
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#fff',
-                                            textShadow: '0 0 5px black',
-                                            cursor: 'pointer',
+                                            position: "absolute",
+                                            top: "50%",
+                                            right: "1rem",
+                                            transform: "translateY(-50%)",
+                                            fontSize: "2rem",
+                                            background: "none",
+                                            border: "none",
+                                            color: "#fff",
+                                            textShadow: "0 0 5px black",
+                                            cursor: "pointer",
                                         }}
                                     >
                                         ›

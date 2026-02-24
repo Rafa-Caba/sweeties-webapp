@@ -1,11 +1,11 @@
-// src/store/admin/useAuthStore.ts
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { getUserProfile, loginUser, logoutUser, refreshToken, registerUser } from '../../services/admin/auth';
-import { type LoginPayload, type User, type RegisterPayload, mapUserFromApi } from '../../types';
-import { showErrorToast } from '../../utils/showToast';
-import { updateMyTheme } from '../../services/admin/themes';
-import { useUsersStore } from './useUsersStore';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+
+import { getUserProfile, loginUser, logoutUser, refreshToken, registerUser } from "../../services/admin/auth";
+import { type LoginPayload, type User, type RegisterPayload, mapUserFromApi } from "../../types";
+import { showErrorToast } from "../../utils/showToast";
+import { updateMyTheme } from "../../services/admin/themes";
+import { useUsersStore } from "./useUsersStore";
 
 interface AuthState {
     user: User | null;
@@ -18,7 +18,7 @@ interface AuthState {
     logout: () => Promise<string>;
     refresh: () => Promise<boolean>;
     updateProfile: (payload: FormData) => Promise<User | null>;
-    updateUserTheme: (themeId: number) => Promise<void>;
+    updateUserTheme: (themeId: string) => Promise<void>;
 
     setUser: (user: User | null) => void;
     setToken: (token: string | null) => void;
@@ -41,20 +41,15 @@ export const useAuthStore = create<AuthState>()(
                 register: async (payload) => {
                     set({ loading: true });
                     try {
-                        // 2. Call registerUser with the JSON payload
                         const data = await registerUser(payload);
-                        
-                        // 3. Handle the AuthResponseDTO
-                        const { accessToken, refreshToken,role } = data;
-                        set({ token: accessToken });
-                        localStorage.setItem('refreshToken', refreshToken);
+                        const { accessToken, role } = data;
 
-                        // 4. Fetch the user profile
+                        set({ token: accessToken, role });
+
                         const user = await getUserProfile();
-                        set({ user, role });
-
+                        set({ user });
                     } catch {
-                        showErrorToast('Registration failed.');
+                        showErrorToast("Registration failed.");
                     } finally {
                         set({ loading: false });
                     }
@@ -63,23 +58,15 @@ export const useAuthStore = create<AuthState>()(
                 login: async (payload) => {
                     set({ loading: true });
                     try {
-                        // 1. Call loginUser
-                        const data = await loginUser(payload); // payload is { email, password }
-                        if (!data) throw new Error('Login failed');
+                        const data = await loginUser(payload);
+                        const { accessToken, role } = data;
 
-                        // 2. Destructure the *correct* response from Spring Boot
-                        const { accessToken, refreshToken, role } = data; 
-                        
-                        // 3. Set the access token and refresh token
-                        set({ token: accessToken });
-                        localStorage.setItem('refreshToken', refreshToken);
+                        set({ token: accessToken, role });
 
-                        // 4. NOW, fetch the user profile (which uses the token you just set)
                         const user = await getUserProfile();
-                        set({ user, role })
-
+                        set({ user });
                     } catch (err: any) {
-                        showErrorToast('Login failed. Please try again.');
+                        showErrorToast("Login failed. Please try again.");
                         throw err;
                     } finally {
                         set({ loading: false });
@@ -89,22 +76,17 @@ export const useAuthStore = create<AuthState>()(
                 refresh: async () => {
                     set({ loading: true });
                     try {
-                        const refreshTokenValue = localStorage.getItem('refreshToken');
-                        if (!refreshTokenValue) throw new Error('No refresh token');
+                        const res = await refreshToken();
+                        if (!res?.accessToken) throw new Error("Refresh failed");
 
-                        const res = await refreshToken(refreshTokenValue);
-                        if (!res) throw new Error('Refresh failed');
-
-                        const { accessToken } = res;
-                        set({ token: accessToken });
+                        set({ token: res.accessToken });
 
                         const user = await getUserProfile();
                         set({ user });
 
                         return true;
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    } catch (error) {
-                        showErrorToast('Session expired. Please log in again.');
+                    } catch {
+                        showErrorToast("Session expired. Please log in again.");
                         await get().logout();
                         return false;
                     } finally {
@@ -114,22 +96,18 @@ export const useAuthStore = create<AuthState>()(
 
                 logout: async () => {
                     set({ loading: true });
-
                     try {
-                        const refreshTokenValue = localStorage.getItem('refreshToken');
-
-                        if (refreshTokenValue) {
-                            const { message } = await logoutUser(refreshTokenValue);
-                            localStorage.removeItem('refreshToken');
+                        // Cookie-based logout (best-effort)
+                        try {
+                            const { message } = await logoutUser();
                             set({ user: null, token: null, role: null });
-                            return message;
+                            return message ?? "Logged out";
+                        } catch {
+                            set({ user: null, token: null, role: null });
+                            return "Logged out";
                         }
-
-                        set({ user: null, token: null, role: null });
-                        
-                        return 'Logged out';
                     } catch (err) {
-                        showErrorToast('Logout failed.');
+                        showErrorToast("Logout failed.");
                         throw err;
                     } finally {
                         set({ loading: false });
@@ -139,57 +117,44 @@ export const useAuthStore = create<AuthState>()(
                 updateProfile: async (payload: FormData) => {
                     const { user } = get();
                     if (!user) {
-                        showErrorToast('No user found to update.');
+                        showErrorToast("No user found to update.");
                         return null;
                     }
 
                     set({ loading: true });
                     try {
-                        // 2. Get the updateUser action from the *other* store
                         const { updateUser } = useUsersStore.getState();
-
-                        // 3. Call the action. This will:
-                        //    a) Call the API
-                        //    b) Update the list in useUsersStore
                         const updatedUser = await updateUser(user.id.toString(), payload);
 
                         if (updatedUser) {
-                            // 4. Update *this* store's user object as well
-                            set({ user: updatedUser, loading: false }); 
+                            set({ user: updatedUser, loading: false });
                             return updatedUser;
                         } else {
-                            throw new Error('Update failed');
+                            throw new Error("Update failed");
                         }
                     } catch (err: any) {
-                        showErrorToast(err.response?.data?.message || 'Error al actualizar el perfil.');
+                        showErrorToast(err.response?.data?.message || "Error al actualizar el perfil.");
                         set({ loading: false });
                         throw err;
                     }
                 },
 
-                updateUserTheme: async (themeId: number) => {
-                    // No loading state needed here usually, as it should be instant/optimistic
+                updateUserTheme: async (themeId: string) => {
                     try {
-                        // 1. Call API
                         const updatedUserApi = await updateMyTheme(themeId);
-                        
-                        // 2. Map response
                         const updatedUser = mapUserFromApi(updatedUserApi);
-
-                        // 3. Update local state immediately
                         set({ user: updatedUser });
-                        
-                        // Optional: You could show a toast, but visual theme change is usually enough feedback
                     } catch (error) {
                         console.error("Failed to save theme preference", error);
                     }
                 },
             }),
             {
-                name: 'AuthStore',
+                name: "AuthStore",
                 partialize: (state) => ({
                     user: state.user,
                     token: state.token,
+                    role: state.role,
                 }),
             }
         )

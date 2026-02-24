@@ -1,6 +1,11 @@
 export interface DashboardStats {
     userCount: number;
     itemCount: number;
-    pendingOrdersCount: number;
+
+    ordersTotal: number;
+    ordersPending: number;
+    ordersShipped: number;
+    ordersDelivered: number;
+
     totalRevenue: number;
 }

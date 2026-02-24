@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO';
+export type OrderStatus = "PENDIENTE" | "ENVIADO" | "ENTREGADO";
 
 export interface OrderItem {
     productId: string;
@@ -8,14 +8,22 @@ export interface OrderItem {
 }
 
 export interface Order {
-    id: number;
+    id: string;
     name: string;
     email: string;
     phone: string;
-    note?: string;
+    note: string | null;
+
     items: OrderItem[];
     total: number;
-    status: 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO'; // Enum matching Java
-    createdAt: string; // ISO Date string
-    updatedAt: string;
+    status: OrderStatus;
+
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
+// Public tracking payload
+export interface TrackOrderPayload {
+    orderId: string;
+    email: string;
 }

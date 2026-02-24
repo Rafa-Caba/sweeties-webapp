@@ -1,39 +1,56 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { FormWrapper, FormGroup, PrimaryBtn } from "../../styles/admin/EditItemStyles";
-import type { Item } from "../../types";
+import type { ItemApi } from "../../types";
 import { useAdminItemsStore } from "../../store/admin/useAdminItemsStore";
+import { showErrorToast, showSuccessToast } from "../../utils/showToast";
 
 interface Props {
-    item: Item;
+    item: ItemApi;
 }
 
 export const EditItemForm = ({ item }: Props) => {
     const { updateItem } = useAdminItemsStore();
-    const [formData, setFormData] = useState<Item>(item);
     const [submitting, setSubmitting] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+    const [name, setName] = useState(item.name ?? "");
+    const [description, setDescription] = useState(item.description ?? "");
+
+    const canSubmit = useMemo(() => {
+        return name.trim().length > 0 && description.trim().length > 0;
+    }, [name, description]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!canSubmit) {
+            showErrorToast("Completa nombre y descripción.");
+            return;
+        }
+
         setSubmitting(true);
-
         try {
-            const form = new FormData();
-            Object.entries(formData).forEach(([key, val]) => {
-                if (val !== undefined && val !== null) {
-                    form.append(key, val as any);
-                }
-            });
+            const dto = {
+                name: name.trim(),
+                description: description.trim(),
+                price: item.price,
+                isVisible: item.isVisible,
+                materials: item.materials ?? [],
+                size: item.size ?? [],
+            };
 
-            await updateItem(item.id, form);
-            alert("Item actualizado con éxito!");
+            const form = new FormData();
+            form.append("item", new Blob([JSON.stringify(dto)], { type: "application/json" }));
+
+            const updated = await updateItem(item.id, form);
+
+            if (updated) {
+                showSuccessToast("Item actualizado con éxito!");
+            } else {
+                showErrorToast("No se pudo actualizar el item.");
+            }
         } catch (err) {
             console.error(err);
-            alert("Error al actualizar el item");
+            showErrorToast("Error al actualizar el item");
         } finally {
             setSubmitting(false);
         }
@@ -43,15 +60,20 @@ export const EditItemForm = ({ item }: Props) => {
         <FormWrapper onSubmit={handleSubmit}>
             <FormGroup>
                 <label>Nombre</label>
-                <input name="name" value={formData.name} onChange={handleChange} required />
+                <input name="name" value={name} onChange={(e) => setName(e.target.value)} required />
             </FormGroup>
 
             <FormGroup>
                 <label>Descripción</label>
-                <textarea name="description" value={formData.info} onChange={handleChange} />
+                <textarea
+                    name="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                />
             </FormGroup>
 
-            <PrimaryBtn type="submit" disabled={submitting}>
+            <PrimaryBtn type="submit" disabled={submitting || !canSubmit}>
                 {submitting ? "Guardando..." : "Guardar Cambios"}
             </PrimaryBtn>
         </FormWrapper>

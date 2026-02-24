@@ -18,7 +18,7 @@ export const CheckoutSection = () => {
     const navigate = useNavigate();
     const { items, getTotal, clearCart } = useCartStore();
     const { addOrder } = useOrdersStore();
-    
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -38,51 +38,54 @@ export const CheckoutSection = () => {
         e.preventDefault();
 
         if (!formData.name || !formData.email || !formData.phone) {
-            Swal.fire('Campos requeridos', 'Por favor completa los campos obligatorios', 'warning');
+            Swal.fire("Campos requeridos", "Por favor completa los campos obligatorios", "warning");
             return;
         }
 
         setLoading(true);
         try {
-            // 1. Prepare the payload for the backend
+            const total = getTotal();
+
             const payload = {
                 ...formData,
-                total: getTotal(),
-                items: items.map(item => ({
-                    productId: item.id.toString(),
+                note: formData.note?.trim() ? formData.note.trim() : "",
+                total,
+                items: items.map((item) => ({
+                    productId: item.id, // ya es string
                     name: item.name,
                     price: item.price,
-                    quantity: item.quantity
-                }))
+                    quantity: item.quantity,
+                })),
             };
 
-            // 2. Send to backend
             const response = await sendOrder(payload);
 
-            // 3. Save to Local History (Important for Guest tracking!)
+            const nowIso = new Date().toISOString();
             const localOrder = {
                 id: response.orderId,
                 ...formData,
-                total: getTotal(),
-                status: 'PENDIENTE' as const,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                items: payload.items 
+                note: payload.note,
+                total,
+                status: "PENDIENTE" as const,
+                createdAt: nowIso,
+                updatedAt: nowIso,
+                items: payload.items,
             };
+
             addOrder(localOrder);
 
             Swal.fire({
-                icon: 'success',
-                title: 'Pedido enviado',
-                text: 'Te contactaremos pronto para confirmar 🧸',
-                confirmButtonColor: '#ef9ac5',
+                icon: "success",
+                title: "Pedido enviado",
+                text: "Te contactaremos pronto para confirmar 🧸",
+                confirmButtonColor: "#ef9ac5",
             });
 
             clearCart();
-            navigate('/ordenes'); // Redirect to the "My Orders" page we built!
+            navigate("/ordenes");
         } catch (error: any) {
             console.error(error);
-            Swal.fire('Error', 'Hubo un problema al enviar tu pedido. Intenta más tarde.', 'error');
+            Swal.fire("Error", "Hubo un problema al enviar tu pedido. Intenta más tarde.", "error");
         } finally {
             setLoading(false);
         }

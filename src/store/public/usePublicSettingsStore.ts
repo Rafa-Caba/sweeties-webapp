@@ -1,10 +1,10 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { getPublicSettings } from '../../services/public/settings';
-import type { AdminSettings } from '../../types/admin/settings';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { getPublicSettings } from "../../services/public/settings";
+import type { PublicAdminSettings } from "../../types/admin/settings";
 
 interface PublicSettingsState {
-    settings: AdminSettings | null;
+    settings: PublicAdminSettings | null;
     loading: boolean;
     fetchPublicSettings: () => Promise<void>;
 }
@@ -28,7 +28,7 @@ export const usePublicSettingsStore = create<PublicSettingsState>()(
                     }
                 },
             }),
-            { name: 'public-settings-store' }
+            { name: "public-settings-store" }
         )
     )
 );

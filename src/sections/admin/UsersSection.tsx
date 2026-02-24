@@ -1,17 +1,16 @@
-import { useEffect } from 'react';
-import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
-import { AdminLayout } from '../../components/admin/layout/AdminLayout';
-import { useUsersStore } from '../../store/admin/useUsersStore';
+import { AdminLayout } from "../../components/admin/layout/AdminLayout";
+import { useUsersStore } from "../../store/admin/useUsersStore";
 
-import { SectionBody, SectionHeader } from '../../styles/admin/DashboardStyles';
-import { FancyCreateButton, UsersGrid } from '../../styles/admin/UsersStyles';
-import { UserCard } from '../../components/admin/UserCard';
+import { SectionBody, SectionHeader } from "../../styles/admin/DashboardStyles";
+import { FancyCreateButton, UsersGrid } from "../../styles/admin/UsersStyles";
+import { UserCard } from "../../components/admin/UserCard";
 
 export const UsersSection = () => {
     const navigate = useNavigate();
-
     const { users, loading, error, fetchUsers, deleteUser } = useUsersStore();
 
     useEffect(() => {
@@ -22,21 +21,21 @@ export const UsersSection = () => {
 
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire({
-            title: '¿Eliminar este usuario?',
-            text: 'Esta acción no se puede deshacer.',
-            icon: 'warning',
+            title: "¿Eliminar este usuario?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#e74c3c',
-            cancelButtonColor: '#aaa',
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#e74c3c",
+            cancelButtonColor: "#aaa",
             reverseButtons: true,
         });
 
         if (!isConfirmed) return;
 
         Swal.fire({
-            title: 'Eliminando...',
+            title: "Eliminando...",
             allowOutsideClick: false,
             showConfirmButton: false,
             didOpen: () => Swal.showLoading(),
@@ -48,16 +47,16 @@ export const UsersSection = () => {
 
         if (success) {
             Swal.fire({
-                icon: 'success',
-                title: 'Usuario eliminado',
+                icon: "success",
+                title: "Usuario eliminado",
                 timer: 1500,
                 showConfirmButton: false,
             });
         } else {
             Swal.fire({
-                icon: 'error',
-                title: 'Error al eliminar',
-                text: 'No se pudo eliminar el usuario.',
+                icon: "error",
+                title: "Error al eliminar",
+                text: "No se pudo eliminar el usuario.",
             });
         }
     };
@@ -70,25 +69,21 @@ export const UsersSection = () => {
         <AdminLayout>
             <SectionHeader>
                 <div>
-                    <h1>Users</h1>
-                    <p>Manage system users</p>
+                    <h1>Usuarios</h1>
+                    <p>Administra los usuarios del sistema</p>
                 </div>
-                <FancyCreateButton to="/admin/users/new">+ New User</FancyCreateButton>
+                <FancyCreateButton to="/admin/users/new">+ Nuevo Usuario</FancyCreateButton>
             </SectionHeader>
 
             <SectionBody>
                 {loading && <p>Cargando usuarios…</p>}
-                {error && !loading && <p style={{ color: 'red' }}>{error}</p>}
+                {error && !loading && <p style={{ color: "red" }}>{error}</p>}
 
                 {!loading && !error && users.length > 0 && (
                     <UsersGrid>
                         {users.map((user) => (
                             <div key={user.id}>
-                                <UserCard
-                                    user={user}
-                                    onDelete={() => handleDelete(user.id.toString())} 
-                                    onEdit={() => handleEdit(user.id.toString())}
-                                />
+                                <UserCard user={user} onDelete={() => handleDelete(user.id)} onEdit={() => handleEdit(user.id)} />
                             </div>
                         ))}
                     </UsersGrid>

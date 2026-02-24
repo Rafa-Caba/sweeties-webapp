@@ -1,27 +1,43 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { mapItemFromApi, type Item } from '../../types';
+
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+
+
 import {
     adminGetItems,
     adminCreateItem,
     adminUpdateItem,
     adminDeleteItem,
     adminGetItemById,
-} from '../../services/admin/items';
+} from "../../services/admin/items";
+import { mapItemFromApi, normalizeItemApiForForm, type Item, type ItemApi } from "../../types";
+
+function getErrorMessage(e: any): string {
+    // Axios: e.response?.data?.message
+    return (
+        e?.response?.data?.message ||
+        e?.message ||
+        "Network Error"
+    );
+}
 
 interface AdminItemsState {
+    // Lightweight list for cards/table
     items: Item[];
     loading: boolean;
-    currentItem: Item | null;
+
+    // Full detail record for edit pages/modals
+    currentItemApi: ItemApi | null;
     loadingCurrent: boolean;
+
     error: string | null;
 
     fetchItems: () => Promise<void>;
-    fetchItemById: (id: number) => Promise<void>
+    fetchItemById: (id: string) => Promise<void>;
     clearCurrentItem: () => void;
 
-    createItem: (form: FormData) => Promise<Item | null>;
-    updateItem: (id: number, form: FormData) => Promise<Item | null>;
+    createItem: (form: FormData) => Promise<ItemApi | null>;
+    updateItem: (id: string, form: FormData) => Promise<ItemApi | null>;
     deleteItem: (id: string) => Promise<boolean>;
 }
 
@@ -31,84 +47,95 @@ export const useAdminItemsStore = create<AdminItemsState>()(
             (set, get) => ({
                 items: [],
                 loading: false,
-                currentItem: null,
+
+                currentItemApi: null,
                 loadingCurrent: false,
+
                 error: null,
 
                 fetchItems: async () => {
                     set({ loading: true, error: null });
                     try {
                         const data = await adminGetItems();
-                        set({ items: data.map(mapItemFromApi) });
+                        set({ items: (data as ItemApi[]).map(mapItemFromApi), error: null });
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error al cargar items' });
+                        set({ error: getErrorMessage(e) });
                     } finally {
                         set({ loading: false });
                     }
                 },
 
-                fetchItemById: async (id) => {
+                fetchItemById: async (id: string) => {
                     set({ loadingCurrent: true, error: null });
                     try {
                         const data = await adminGetItemById(id);
-                        set({ currentItem: mapItemFromApi(data) });
+                        // Keep the full API shape for edit screens
+                        set({ currentItemApi: normalizeItemApiForForm(data), error: null });
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error al cargar item' });
+                        set({ error: getErrorMessage(e) });
                     } finally {
                         set({ loadingCurrent: false });
                     }
                 },
 
-                clearCurrentItem: () => set({ currentItem: null }),
+                clearCurrentItem: () => set({ currentItemApi: null }),
 
-                createItem: async (form) => {
+                createItem: async (form: FormData) => {
                     set({ error: null });
                     try {
-                        const createdApi = await adminCreateItem(form); // 1. Get the raw API response
-                        if (!createdApi) return null; // Handle null/undefined case
+                        const createdApi = await adminCreateItem(form);
+                        const createdListItem = mapItemFromApi(createdApi);
 
-                        // 2. Map the raw API data to your clean Item type
-                        const created = mapItemFromApi(createdApi); 
-
-                        // 3. Add the *mapped* object to the state
-                        set({ items: [created, ...get().items] });
-                        
-                        return created;
+                        set({ items: [createdListItem, ...get().items] });
+                        return createdApi;
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error al crear item' });
+                        set({ error: getErrorMessage(e) || "Error al crear item" });
                         return null;
                     }
                 },
 
-                updateItem: async (id, form) => {
+                updateItem: async (id: string, form: FormData) => {
                     set({ error: null });
                     try {
                         const updatedApi = await adminUpdateItem(id, form);
-                        const updated = mapItemFromApi(updatedApi);
+                        const updatedListItem = mapItemFromApi(updatedApi);
+
                         set({
-                            items: get().items.map((it) => (it.id === updated.id ? updated : it)),
+                            items: get().items.map((it) => (it.id === updatedListItem.id ? updatedListItem : it)),
+                            currentItemApi:
+                                get().currentItemApi?.id === updatedApi.id
+                                    ? normalizeItemApiForForm(updatedApi)
+                                    : get().currentItemApi,
                         });
-                        return updated;
+
+                        return updatedApi;
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error al actualizar item' });
+                        set({ error: getErrorMessage(e) || "Error al actualizar item" });
                         return null;
                     }
                 },
 
-                deleteItem: async (id) => {
+                deleteItem: async (id: string) => {
                     set({ error: null });
                     try {
                         await adminDeleteItem(id);
-                        // Compare number to string, so we must convert
-                        set({ items: get().items.filter((it) => it.id !== Number(id)) });
+                        set({ items: get().items.filter((it) => it.id !== id) });
+
+                        if (get().currentItemApi?.id === id) set({ currentItemApi: null });
                         return true;
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error al eliminar item' });
+                        set({ error: getErrorMessage(e) || "Error al eliminar item" });
                         return false;
                     }
                 },
             }),
-            { name: 'admin-items-store' }
+            {
+                name: "admin-items-store",
+                // Persist only the lightweight list for performance/stability.
+                partialize: (state) => ({
+                    items: state.items,
+                }),
+            }
         )
     )
 );

@@ -5,9 +5,9 @@ import {
     UserName,
     UserMeta,
     UserActions,
-} from '../../styles/admin/UsersStyles';
-import { type User } from '../../types';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+} from "../../styles/admin/UsersStyles";
+import { type User } from "../../types";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 interface Props {
     user: User;
@@ -18,7 +18,7 @@ interface Props {
 export const UserCard = ({ user, onDelete, onEdit }: Props) => {
     return (
         <UserCardWrapper>
-            <UserImage src={user.imageUrl || '/default-user.png'} alt={user.username} />
+            <UserImage src={user.imageUrl || "/default-user.png"} alt={user.username} />
 
             <UserInfo>
                 <UserName>@{user.username}</UserName>

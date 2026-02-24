@@ -1,8 +1,8 @@
-import type { User } from "./users";
+import type { User, Role } from "./users";
 
 export interface LoginPayload {
-  username: string;
-  password: string;
+    username: string;
+    password: string;
 }
 
 export interface RegisterPayload {
@@ -12,31 +12,21 @@ export interface RegisterPayload {
     password: string;
 }
 
-export interface LoginResponse {
-    message: string;
-    token: string;
+// ✅ Backend shape (Node BE)
+export interface AuthResponse {
+    accessToken: string;
     refreshToken: string;
+    role: Role;
     user: User;
 }
 
+// ✅ Backend refresh response
 export interface RefreshResponse {
     accessToken: string;
     refreshToken: string;
+    role: Role;
 }
 
 export interface LogoutResponse {
     message: string;
-}
-
-export interface RegisterFormDataFields {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-}
-
-export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  role: string;
 }

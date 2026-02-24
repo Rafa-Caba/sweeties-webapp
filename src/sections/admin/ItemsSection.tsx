@@ -25,11 +25,10 @@ export const ItemsSection = () => {
 	const { items, loading, error, fetchItems, deleteItem } = useAdminItemsStore();
 
 	useEffect(() => {
-		// Load items on mount (or when list is empty)
 		if (!items || items.length === 0) {
 			fetchItems();
 		}
-	}, [items, items?.length, fetchItems]);
+	}, [items?.length, fetchItems]);
 
 	const handleNewItem = () => navigate('/admin/items/new');
 	const handleEdit = (id: string) => navigate(`/admin/items/${id}/edit`);
@@ -50,17 +49,16 @@ export const ItemsSection = () => {
 		if (!isConfirmed) return;
 
 		try {
-			// Mostrar loading mientras elimina
 			Swal.fire({
 				title: 'Eliminando...',
 				allowOutsideClick: false,
 				showConfirmButton: false,
-				didOpen: () => {
-					Swal.showLoading();
-				},
+				didOpen: () => Swal.showLoading(),
 			});
 
 			const success = await deleteItem(id);
+
+			Swal.close();
 
 			if (success) {
 				Swal.fire({
@@ -70,22 +68,14 @@ export const ItemsSection = () => {
 					timer: 1500,
 					showConfirmButton: false,
 				});
-
 				showSuccessToast('Item eliminado correctamente');
 			} else {
-				Swal.fire({
-					icon: 'error',
-					title: 'Error',
-					text: 'No se pudo eliminar el item.',
-				});
+				Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el item.' });
 				showErrorToast('No se pudo eliminar el item');
 			}
 		} catch {
-			Swal.fire({
-				icon: 'error',
-				title: 'Error',
-				text: 'Ocurrió un error al intentar eliminar el item.',
-			});
+			Swal.close();
+			Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al intentar eliminar el item.' });
 			showErrorToast('Error al intentar eliminar el item');
 		}
 	};
@@ -116,35 +106,38 @@ export const ItemsSection = () => {
 
 				{!loading && !error && items.length > 0 && (
 					<ItemsGrid>
-						{items.map((item) => (
-							// 1. Use item.id for the key
-							<ItemCard key={item.id}>
-								<ItemImageWrap>
-									<ItemImage src={item.imageUrl} alt={item.name} />
-									<PriceTag>${item.price}</PriceTag>
-									<StockBadge $isOut={!item.available}>
-										{item.available ? 'Disponible' : 'No disponible'}
-									</StockBadge>
-								</ItemImageWrap>
+						{items.map((item: any) => {
+							const isVisible = typeof item?.isVisible === 'boolean'
+								? item.isVisible
+								: Boolean(item?.available);
 
-								<ItemInfo>
-									<ItemName title={item.name}>{item.name}</ItemName>
-									<ItemMeta>
-										<span>ID:</span>
-										{/* 2. Display the correct ID */}
-										<code>{item.id}</code>
-									</ItemMeta>
+							return (
+								<ItemCard key={item.id}>
+									<ItemImageWrap>
+										<ItemImage src={item.imageUrl} alt={item.name} />
+										<PriceTag>${item.price}</PriceTag>
 
-									<ItemActions>
-										{/* 3. Pass the ID as a string */}
-										<button onClick={() => handleEdit(item.id.toString())}>Editar</button>
-										<button className="danger" onClick={() => handleDelete(item.id.toString())}>
-											Eliminar
-										</button>
-									</ItemActions>
-								</ItemInfo>
-							</ItemCard>
-						))}
+										<StockBadge $isOut={!isVisible}>
+											{isVisible ? 'Disponible' : 'No disponible'}
+										</StockBadge>
+									</ItemImageWrap>
+
+									<ItemInfo>
+										<ItemName title={item.name}>{item.name}</ItemName>
+
+										<ItemMeta>
+											<span>ID:</span>
+											<code>{item.id}</code>
+										</ItemMeta>
+
+										<ItemActions>
+											<button onClick={() => handleEdit(item.id)}>Editar</button>
+											<button className="danger" onClick={() => handleDelete(item.id)}>Eliminar</button>
+										</ItemActions>
+									</ItemInfo>
+								</ItemCard>
+							);
+						})}
 					</ItemsGrid>
 				)}
 			</SectionBody>

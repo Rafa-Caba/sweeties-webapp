@@ -1,18 +1,20 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import type { Order } from '../../types/public/Order';
-import { trackOrder } from '../../services/public/orders';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import type { Order } from "../../types/public/Order";
+import { trackOrder } from "../../services/public/orders";
+
+function getErrorMessage(e: any): string {
+    return e?.response?.data?.message || e?.message || "Error al actualizar el pedido.";
+}
 
 interface OrdersState {
     orders: Order[];
     loading: boolean;
     error: string | null;
-    
-    // Call this after successful checkout
-    addOrder: (order: Order) => void; 
-    
-    // Fetch updates for a specific order
-    fetchOrderDetails: (id: number) => Promise<void>;
+
+    addOrder: (order: Order) => void;
+    fetchOrderDetails: (orderId: string) => Promise<void>;
+    clearError: () => void;
 }
 
 export const useOrdersStore = create<OrdersState>()(
@@ -23,39 +25,51 @@ export const useOrdersStore = create<OrdersState>()(
                 loading: false,
                 error: null,
 
+                clearError: () => set({ error: null }),
+
                 addOrder: (order: Order) => {
-                    // Add new order to the top of the list
-                    set((state) => ({ 
-                        orders: [order, ...state.orders] 
-                    }));
+                    const id = String(order.id);
+
+                    set((state) => {
+                        const exists = state.orders.some((o) => String(o.id) === id);
+                        const next = exists
+                            ? state.orders.map((o) => (String(o.id) === id ? order : o))
+                            : [order, ...state.orders];
+
+                        return { orders: next };
+                    });
                 },
 
-                fetchOrderDetails: async (id: number) => {
+                fetchOrderDetails: async (orderId: string) => {
+                    const id = String(orderId);
+
                     set({ loading: true, error: null });
                     try {
-                        // 1. Find the local order to get the email
-                        const localOrder = get().orders.find(o => o.id === id);
-                        
+                        const localOrder = get().orders.find((o) => String(o.id) === id);
+
                         if (!localOrder) {
-                            throw new Error("Orden no encontrada localmente");
+                            set({
+                                error: "Pedido no encontrado en este dispositivo. Usa el rastreo por email.",
+                            });
+                            return;
                         }
 
-                        // 2. Call the secure endpoint with ID + Email
                         const updatedOrder = await trackOrder(id, localOrder.email);
-                        
-                        // 3. Update state
+
                         set((state) => ({
-                            orders: state.orders.map(o => o.id === id ? updatedOrder : o)
+                            orders: state.orders.map((o) => (String(o.id) === id ? updatedOrder : o)),
                         }));
-                    } catch (error: any) {
-                        console.error('Error updating order status:', error);
-                        // Don't block the UI, just leave the old data
+                    } catch (e: any) {
+                        set({ error: getErrorMessage(e) });
                     } finally {
                         set({ loading: false });
                     }
                 },
             }),
-            { name: 'public-orders-store' }
+            {
+                name: "public-orders-store",
+                partialize: (state) => ({ orders: state.orders }),
+            }
         )
     )
 );

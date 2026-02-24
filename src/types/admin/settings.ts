@@ -1,73 +1,127 @@
+export type ThemeMode = "SYSTEM" | "LIGHT" | "DARK";
+
+export type AuxiliaryLink = {
+    label: string;
+    url: string;
+};
+
+export type Social = {
+    facebook: string | null;
+    instagram: string | null;
+    tiktok: string | null;
+    youtube: string | null;
+    threads: string | null;
+    x: string | null;
+};
+
+export type About = {
+    bio: string | null;
+    imageUrl: string | null;
+    imagePublicId: string | null;
+};
+
+export type Features = {
+    enableOrders: boolean;
+    enableGallery: boolean;
+    enableMaterials: boolean;
+    enableContactPage: boolean;
+    enableCart: boolean;
+};
+
+export type Seo = {
+    siteDescription: string | null;
+    metaKeywords: string[];
+    ogTitle: string | null;
+    ogDescription: string | null;
+    ogImageUrl: string | null;
+    ogImagePublicId: string | null;
+};
+
+export type Visibility = {
+    showEmail: boolean;
+    showPhone: boolean;
+    showWhatsApp: boolean;
+    showAddress: boolean;
+    showSocial: boolean;
+};
+
+export type Home = {
+    heroTitle: string | null;
+    heroSubtitle: string | null;
+    creatorName: string | null;
+};
+
+export type Gallery = {
+    itemsPerPage: number | null;
+};
+
+export type Footer = {
+    legalText: string | null;
+    auxiliaryLinks: AuxiliaryLink[];
+};
+
+// ✅ Admin response
 export interface AdminSettings {
-    // Branding
     siteName: string;
-    siteTagline: string;
-    logoLightUrl?: string;
-    logoDarkUrl?: string;
-    faviconUrl?: string;
+    siteTagline: string | null;
 
-    // Contact
-    contactEmail: string;
-    contactPhone: string;
-    contactWhatsApp: string;
-    contactAddress: string;
+    logoLightUrl: string | null;
+    logoLightPublicId: string | null;
 
-    // UI
-    defaultThemeMode: 'SYSTEM' | 'LIGHT' | 'DARK';
-    publicThemeGroup?: string;
-    adminThemeGroup?: string;
+    logoDarkUrl: string | null;
+    logoDarkPublicId: string | null;
 
-    // Nested Objects
-    social: {
-        facebook?: string;
-        instagram?: string;
-        tiktok?: string;
-        youtube?: string;
-        threads?: string;
-        x?: string;
-    };
+    faviconUrl: string | null;
+    faviconPublicId: string | null;
 
-    features: {
-        enableOrders: boolean;
-        enableGallery: boolean;
-        enableMaterials: boolean;
-        enableContactPage: boolean;
-        enableCart: boolean;
-    };
+    contactEmail: string | null;
+    contactPhone: string | null;
+    contactWhatsApp: string | null;
+    contactAddress: string | null;
 
-    seo: {
-        siteDescription?: string;
-        metaKeywords: string[];
-        ogTitle?: string;
-        ogDescription?: string;
-        ogImageUrl?: string;
-    };
+    about: About;
+    social: Social;
 
-    visibility: {
-        showEmail: boolean;
-        showPhone: boolean;
-        showWhatsApp: boolean;
-        showAddress: boolean;
-        showSocial: boolean;
-    };
+    defaultThemeMode: ThemeMode;
+    publicThemeGroup: string | null;
+    adminThemeGroup: string | null;
 
-    home: {
-        heroTitle?: string;
-        heroSubtitle?: string;
-        creatorName?: string;
-    };
+    features: Features;
+    seo: Seo;
+    visibility: Visibility;
+    home: Home;
+    gallery: Gallery;
+    footer: Footer;
+}
 
-    about: {
-        bio?: string;
-        imageUrl?: string;
-    };
+// ✅ Public response
+export interface PublicAdminSettings {
+    siteName: string;
+    siteTagline: string | null;
 
-    gallery: {
-        itemsPerPage: number;
-    };
+    logoLightUrl: string | null;
+    logoDarkUrl: string | null;
+    faviconUrl: string | null;
 
-    footer: {
-        legalText?: string;
-        auxiliaryLinks: { label: string; url: string }[];
-    };
+    contactEmail: string | null;
+    contactPhone: string | null;
+    contactWhatsApp: string | null;
+    contactAddress: string | null;
+
+    about: About | null;
+    social: Social | null;
+
+    defaultThemeMode: ThemeMode;
+    publicThemeGroup: string | null;
+
+    siteDescription: string | null;
+    metaKeywords: string[] | null;
+    ogTitle: string | null;
+    ogDescription: string | null;
+    ogImageUrl: string | null;
+
+    visibility: Visibility;
+    home: Home;
+    gallery: Gallery;
+    footer: Footer;
 }

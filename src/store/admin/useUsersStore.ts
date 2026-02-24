@@ -1,14 +1,13 @@
-// /store/admin/useUsersStore.ts
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { mapUserFromApi, type User } from '../../types';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { mapUserFromApi, type User } from "../../types";
 import {
     adminGetAllUsers,
     adminGetUserById,
     adminCreateUser,
     adminUpdateUser,
     adminDeleteUserById,
-} from '../../services/admin/users';
+} from "../../services/admin/users";
 
 interface AdminUsersState {
     users: User[];
@@ -40,10 +39,9 @@ export const useUsersStore = create<AdminUsersState>()(
                     set({ loading: true, error: null });
                     try {
                         const data = await adminGetAllUsers();
-
-                        set({ users: data.map(mapUserFromApi) });
+                        set({ users: data.items.map(mapUserFromApi) });
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error loading users' });
+                        set({ error: e?.message || "Error loading users" });
                     } finally {
                         set({ loading: false });
                     }
@@ -54,11 +52,10 @@ export const useUsersStore = create<AdminUsersState>()(
                     try {
                         const user = await adminGetUserById(id);
                         const currentUser = mapUserFromApi(user);
-
                         set({ currentUser });
                         return currentUser;
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error loading user' });
+                        set({ error: e?.message || "Error loading user" });
                     } finally {
                         set({ loadingCurrent: false });
                     }
@@ -69,11 +66,12 @@ export const useUsersStore = create<AdminUsersState>()(
                 createUser: async (form) => {
                     set({ error: null });
                     try {
-                        const created = await adminCreateUser(form);
+                        const createdApi = await adminCreateUser(form);
+                        const created = mapUserFromApi(createdApi);
                         set({ users: [created, ...get().users] });
                         return created;
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error creating user' });
+                        set({ error: e?.message || "Error creating user" });
                         return null;
                     }
                 },
@@ -82,15 +80,16 @@ export const useUsersStore = create<AdminUsersState>()(
                     set({ error: null });
                     try {
                         const updated = await adminUpdateUser(id, form);
-                        const mappedUser = mapUserFromApi(updated); // <-- Map the response
+                        const mappedUser = mapUserFromApi(updated);
+
                         set({
                             users: get().users.map((u) => (u.id === mappedUser.id ? mappedUser : u)),
+                            currentUser: get().currentUser?.id === mappedUser.id ? mappedUser : get().currentUser,
                         });
 
                         return mappedUser;
-
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error updating user' });
+                        set({ error: e?.message || "Error updating user" });
                         return null;
                     }
                 },
@@ -99,17 +98,18 @@ export const useUsersStore = create<AdminUsersState>()(
                     set({ error: null });
                     try {
                         await adminDeleteUserById(id);
-                        set({ users: get().users.filter((u) => u.id !== Number(id)) }); // <-- FIX
-                        
+                        set({
+                            users: get().users.filter((u) => u.id !== id),
+                            currentUser: get().currentUser?.id === id ? null : get().currentUser,
+                        });
                         return true;
-
                     } catch (e: any) {
-                        set({ error: e?.message || 'Error deleting user' });
+                        set({ error: e?.message || "Error deleting user" });
                         return false;
                     }
                 },
             }),
-            { name: 'admin-users-store' }
+            { name: "admin-users-store" }
         )
     )
 );

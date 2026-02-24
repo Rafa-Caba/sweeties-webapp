@@ -1,14 +1,13 @@
 export interface ThemeDefinition {
-    id: number;
+    id: string;
     name: string;
     isDark: boolean;
-    
-    // Colors matching your DB columns
-    primaryColor: string;
-    accentColor: string;
-    backgroundColor: string;
-    textColor: string;
-    cardColor: string;
-    buttonColor: string;
-    navColor: string;
+
+    primaryColor: string | null;
+    accentColor: string | null;
+    backgroundColor: string | null;
+    textColor: string | null;
+    cardColor: string | null;
+    buttonColor: string | null;
+    navColor: string | null;
 }

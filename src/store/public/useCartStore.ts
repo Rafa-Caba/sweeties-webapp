@@ -1,18 +1,21 @@
-// store/public/useCartStore.ts
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import type { CartItem } from '../../types/public/CartItem';
-import { showAddRemoveiTemToast } from '../../utils/untilsFunctions';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import type { CartItem } from "../../types/public/CartItem";
+import { showAddRemoveiTemToast } from "../../utils/untilsFunctions";
+
+function toId(v: unknown): string {
+    return typeof v === "string" ? v : String(v ?? "");
+}
 
 interface CartState {
     items: CartItem[];
-    addItem: (item: Omit<CartItem, 'quantity'>) => void;
-    removeItem: (id: number) => void;
+    addItem: (item: Omit<CartItem, "quantity">) => void;
+    removeItem: (id: string) => void;
     clearCart: () => void;
-    updateQuantity: (id: number, quantity: number) => void;
+    updateQuantity: (id: string, quantity: number) => void;
     getTotal: () => number;
-    getQuantityById: (id: number) => number;
+    getQuantityById: (id: string) => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -22,32 +25,38 @@ export const useCartStore = create<CartState>()(
                 items: [],
 
                 addItem: (item) => {
-                    const existing = get().items.find((i) => i.id === item.id);
+                    const id = toId(item.id);
+                    const existing = get().items.find((i) => toId(i.id) === id);
+
                     if (existing) {
                         set((state) => {
-                            const found = state.items.find((i: CartItem) => i.id === item.id);
+                            const found = state.items.find((i: CartItem) => toId(i.id) === id);
                             if (found) found.quantity += 1;
                         });
                     } else {
                         set((state) => {
-                            state.items.push({ ...item, quantity: 1 });
+                            state.items.push({ ...item, id, quantity: 1 });
                         });
                     }
 
                     showAddRemoveiTemToast();
                 },
 
-                removeItem: (id) => {
+                removeItem: (rawId) => {
+                    const id = toId(rawId);
+
                     set((state) => {
-                        state.items = state.items.filter((i: CartItem) => i.id !== id);
+                        state.items = state.items.filter((i: CartItem) => toId(i.id) !== id);
                     });
 
                     showAddRemoveiTemToast();
                 },
 
-                updateQuantity: (id, quantity) => {
+                updateQuantity: (rawId, quantity) => {
+                    const id = toId(rawId);
+
                     set((state) => {
-                        const item = state.items.find((i: CartItem) => i.id === id);
+                        const item = state.items.find((i: CartItem) => toId(i.id) === id);
                         if (item) item.quantity = quantity;
                     });
 
@@ -61,18 +70,17 @@ export const useCartStore = create<CartState>()(
                 },
 
                 getTotal: () => {
-                    return get().items.reduce((total, item) => {
-                        return total + item.price * item.quantity;
-                    }, 0);
+                    return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
                 },
 
-                getQuantityById: (id) => {
-                    const item = get().items.find((i) => i.id === id);
+                getQuantityById: (rawId) => {
+                    const id = toId(rawId);
+                    const item = get().items.find((i) => toId(i.id) === id);
                     return item ? item.quantity : 0;
                 },
             })),
             {
-                name: 'sweeties-cart-storage', // localStorage key
+                name: "sweeties-cart-storage",
                 partialize: (state) => ({ items: state.items }),
             }
         )

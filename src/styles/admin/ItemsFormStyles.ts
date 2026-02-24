@@ -132,6 +132,11 @@ export const PrimaryBtn = styled.button`
   color: ${({ theme }) => theme.colors.buttonText};
   box-shadow: 0 6px 20px rgba(0,0,0,.08);
 
+  grid-column: span 2;
+
+  width: 100%;
+  justify-self: stretch;
+
   &:disabled { opacity: .6; cursor: not-allowed; }
 `;
 
