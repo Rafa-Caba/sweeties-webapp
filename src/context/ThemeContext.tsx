@@ -1,163 +1,173 @@
-// import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-// import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-// import { theme as defaultTheme, darkTheme } from '../theme';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { ThemeProvider as StyledThemeProvider } from "styled-components";
 
-// type ThemeType = 'light' | 'dark';
+import { mapDbThemeToStyled } from "../utils/themeMapper";
+import { useAuthStore } from "../store/admin/useAuthStore";
+import { getAllThemes } from "../services/public/themes";
+import type { ThemeDefinition } from "../types/admin/theme";
 
-// interface ThemeContextType {
-//     themeName: ThemeType;
-//     toggleTheme: () => void;
-//     isDark: boolean;
-// }
-
-// const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-// export const useThemeContext = () => {
-//     const context = useContext(ThemeContext);
-//     if (!context) throw new Error('useThemeContext must be used within a ThemeProvider');
-//     return context;
-// };
-
-// interface Props {
-//     children: ReactNode;
-// }
-
-// export const ThemeContextProvider = ({ children }: Props) => {
-//     const [themeName, setThemeName] = useState<ThemeType>('light');
-
-//     useEffect(() => {
-//         const stored = localStorage.getItem('sweeties-theme');
-//         if (stored === 'dark' || stored === 'light') {
-//             setThemeName(stored);
-//         }
-//     }, []);
-
-//     const toggleTheme = () => {
-//         setThemeName((prev) => {
-//             const newTheme = prev === 'light' ? 'dark' : 'light';
-//             localStorage.setItem('sweeties-theme', newTheme);
-//             return newTheme;
-//         });
-//     };
-
-//     const isDark = themeName === 'dark';
-//     const currentTheme = isDark ? darkTheme : defaultTheme;
-
-//     return (
-//         <ThemeContext.Provider value={{ themeName, toggleTheme, isDark }}>
-//             <StyledThemeProvider theme={currentTheme}>
-//                 {children}
-//             </StyledThemeProvider>
-//         </ThemeContext.Provider>
-//     );
-// };
-
-
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-import { mapDbThemeToStyled } from '../utils/themeMapper';
-import { useAuthStore } from '../store/admin/useAuthStore';
-import { getAllThemes } from '../services/public/themes';
-import type { ThemeDefinition } from '../types/admin/theme';
+type ThemeName = "light" | "dark";
 
 interface ThemeContextType {
-    themeName: 'light' | 'dark';
+    themeName: ThemeName;
     isDark: boolean;
     toggleTheme: () => void;
+
     currentTheme: ThemeDefinition | null;
     availableThemes: ThemeDefinition[];
-    setThemeById: (id: number) => void;
+
+    setThemeById: (id: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useThemeContext = () => {
     const context = useContext(ThemeContext);
-    if (!context) throw new Error('useThemeContext error');
+    if (!context) throw new Error("useThemeContext error");
     return context;
 };
 
+const FALLBACK_THEME_DEFINITION: ThemeDefinition = {
+    id: "fallback",
+    name: "Loading",
+    isDark: false,
+
+    primaryColor: null,
+    accentColor: null,
+    backgroundColor: null,
+    textColor: null,
+    cardColor: null,
+    buttonColor: null,
+    navColor: null,
+};
+
+function ensureString(v: unknown, fallback: string): string {
+    return typeof v === "string" && v.trim().length > 0 ? v : fallback;
+}
+
+function normalizeStyledTheme(input: any): any {
+    // This guarantees StyledThemeProvider receives strings (not null) in colors.
+    // We keep other properties as-is.
+    const colors = input?.colors ?? {};
+
+    return {
+        ...input,
+        isDark: Boolean(input?.isDark),
+        id: ensureString(input?.id, "theme"),
+        name: ensureString(input?.name, "Theme"),
+        colors: {
+            ...colors,
+            primary: ensureString(colors?.primary, "#673ab7"),
+            accent: ensureString(colors?.accent, "#ff7aa2"),
+            background: ensureString(colors?.background, "#ffffff"),
+            text: ensureString(colors?.text, "#111111"),
+            card: ensureString(colors?.card, "#ffffff"),
+            button: ensureString(colors?.button, "#673ab7"),
+            buttonHover: ensureString(colors?.buttonHover, "#5a31a6"),
+
+            // If your DefaultTheme includes these, keep them non-empty:
+            navBg: ensureString(colors?.navBg, ensureString(colors?.background, "#ffffff")),
+            pageBg: ensureString(colors?.pageBg, ensureString(colors?.background, "#ffffff")),
+
+            border: ensureString(colors?.border, "rgba(0,0,0,0.10)"),
+
+            waveTop: ensureString(colors?.waveTop, "rgba(103, 58, 183, 0.10)"),
+            waveBottom: ensureString(colors?.waveBottom, "rgba(103, 58, 183, 0.06)"),
+
+            mainTitle: ensureString(colors?.mainTitle, ensureString(colors?.text, "#111111")),
+            mainSubtitle: ensureString(colors?.mainSubtitle, "rgba(0,0,0,0.65)"),
+            creatorName: ensureString(colors?.creatorName, "rgba(0,0,0,0.75)"),
+
+            textMuted: ensureString(colors?.textMuted, "rgba(0,0,0,0.60)"),
+            textSecondary: ensureString(colors?.textSecondary, "rgba(0,0,0,0.70)"),
+        },
+    };
+}
+
 export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
     const [themes, setThemes] = useState<ThemeDefinition[]>([]);
-    const [activeThemeId, setActiveThemeId] = useState<number | null>(null);
+    const [activeThemeId, setActiveThemeId] = useState<string | null>(null);
     const { user } = useAuthStore();
 
-    // 1. Fetch Themes
+    // 1) Fetch Themes
     useEffect(() => {
         const load = async () => {
             try {
                 const data = await getAllThemes();
-                setThemes(data);
+                setThemes(Array.isArray(data) ? data : []);
 
-                // Determine initial theme
-                const storedId = localStorage.getItem('sweeties-theme-id');
-                let targetId = data.length > 0 ? data[0].id : null; // Default to first
+                const storedId = localStorage.getItem("sweeties-theme-id"); // should be string theme id
+                let targetId: string | null = data?.length ? data[0].id : null;
 
+                // User preference (Mongo id string)
                 if (user?.themeId) {
-                    // If user has a saved preference, confirm it exists in the list
-                    const exists = data.find(t => t.id === user.themeId);
+                    const exists = data.find((t) => t.id === user.themeId);
                     if (exists) targetId = user.themeId;
                 } else if (storedId) {
-                    const exists = data.find(t => t.id === Number(storedId));
-                    if (exists) targetId = Number(storedId);
+                    const exists = data.find((t) => t.id === storedId);
+                    if (exists) targetId = storedId;
                 }
 
                 setActiveThemeId(targetId);
             } catch (error) {
                 console.error("Failed to load themes", error);
+                setThemes([]);
+                setActiveThemeId(null);
             }
         };
-        load();
-    }, [user?.themeId]); // Dependency on user.themeId ensures update on login
 
-    const handleSetTheme = (id: number) => {
-        setActiveThemeId(id);
-        localStorage.setItem('sweeties-theme-id', String(id));
+        load();
+    }, [user?.themeId]);
+
+    const setThemeById = (id: string) => {
+        const nextId = String(id);
+        setActiveThemeId(nextId);
+        localStorage.setItem("sweeties-theme-id", nextId);
     };
 
-    // 2. Calculate current theme
-    // Fallback to a dummy object to prevent crashes
-    const currentThemeDefinition = themes.find(t => t.id === activeThemeId) 
-                                   || themes[0] 
-                                   || { id: 0, name: 'Loading', isDark: false } as ThemeDefinition;
+    const currentThemeDefinition: ThemeDefinition = useMemo(() => {
+        if (!themes.length) return FALLBACK_THEME_DEFINITION;
+        const found = themes.find((t) => t.id === activeThemeId);
+        return found || themes[0] || FALLBACK_THEME_DEFINITION;
+    }, [themes, activeThemeId]);
 
-    const styledTheme = mapDbThemeToStyled(currentThemeDefinition);
+    const styledTheme = useMemo(() => {
+        // Map DB -> Styled Theme, then normalize to avoid nulls
+        const mapped = mapDbThemeToStyled(currentThemeDefinition);
+        return normalizeStyledTheme(mapped);
+    }, [currentThemeDefinition]);
 
-    // 3. Explicit Toggle Logic
     const toggleTheme = () => {
         if (!themes.length) return;
 
-        // Find the specific target themes by Name
-        const lightTheme = themes.find(t => t.name === 'Clásico');
-        const darkTheme = themes.find(t => t.name === 'Noche');
+        // Find the specific target themes by name
+        const lightTheme = themes.find((t) => t.name === "Clásico");
+        const darkTheme = themes.find((t) => t.name === "Noche");
 
         if (!lightTheme || !darkTheme) {
             console.warn("Could not find 'Clásico' or 'Noche' themes in DB");
             return;
         }
 
-        // LOGIC:
-        // If the current Active ID matches the Dark Theme ID, we MUST go to Light.
-        // For any other case (Clásico, Dulce, etc.), we go to Dark.
         if (activeThemeId === darkTheme.id) {
-            handleSetTheme(lightTheme.id);
+            setThemeById(lightTheme.id);
         } else {
-            handleSetTheme(darkTheme.id);
+            setThemeById(darkTheme.id);
         }
     };
 
     return (
-        <ThemeContext.Provider value={{ 
-            themeName: styledTheme.isDark ? 'dark' : 'light',
-            isDark: styledTheme.isDark,
-            toggleTheme,
-            currentTheme: currentThemeDefinition,
-            availableThemes: themes, 
-            setThemeById: handleSetTheme 
-        }}>
-            <StyledThemeProvider theme={styledTheme}>
-                {children}
-            </StyledThemeProvider>
+        <ThemeContext.Provider
+            value={{
+                themeName: styledTheme.isDark ? "dark" : "light",
+                isDark: styledTheme.isDark,
+                toggleTheme,
+                currentTheme: currentThemeDefinition,
+                availableThemes: themes,
+                setThemeById,
+            }}
+        >
+            <StyledThemeProvider theme={styledTheme}>{children}</StyledThemeProvider>
         </ThemeContext.Provider>
     );
 };

@@ -25,6 +25,10 @@ interface AuthState {
     setLoading: (value: boolean) => void;
 }
 
+function getErrorMessage(err: any, fallback: string): string {
+    return err?.response?.data?.message || err?.message || fallback;
+}
+
 export const useAuthStore = create<AuthState>()(
     devtools(
         persist(
@@ -48,8 +52,8 @@ export const useAuthStore = create<AuthState>()(
 
                         const user = await getUserProfile();
                         set({ user });
-                    } catch {
-                        showErrorToast("Registration failed.");
+                    } catch (err: any) {
+                        showErrorToast(getErrorMessage(err, "Registration failed."));
                     } finally {
                         set({ loading: false });
                     }
@@ -66,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
                         const user = await getUserProfile();
                         set({ user });
                     } catch (err: any) {
-                        showErrorToast("Login failed. Please try again.");
+                        showErrorToast(getErrorMessage(err, "Login failed. Please try again."));
                         throw err;
                     } finally {
                         set({ loading: false });
@@ -85,8 +89,8 @@ export const useAuthStore = create<AuthState>()(
                         set({ user });
 
                         return true;
-                    } catch {
-                        showErrorToast("Session expired. Please log in again.");
+                    } catch (err: any) {
+                        showErrorToast(getErrorMessage(err, "Session expired. Please log in again."));
                         await get().logout();
                         return false;
                     } finally {
@@ -97,7 +101,6 @@ export const useAuthStore = create<AuthState>()(
                 logout: async () => {
                     set({ loading: true });
                     try {
-                        // Cookie-based logout (best-effort)
                         try {
                             const { message } = await logoutUser();
                             set({ user: null, token: null, role: null });
@@ -106,8 +109,8 @@ export const useAuthStore = create<AuthState>()(
                             set({ user: null, token: null, role: null });
                             return "Logged out";
                         }
-                    } catch (err) {
-                        showErrorToast("Logout failed.");
+                    } catch (err: any) {
+                        showErrorToast(getErrorMessage(err, "Logout failed."));
                         throw err;
                     } finally {
                         set({ loading: false });
@@ -124,28 +127,32 @@ export const useAuthStore = create<AuthState>()(
                     set({ loading: true });
                     try {
                         const { updateUser } = useUsersStore.getState();
-                        const updatedUser = await updateUser(user.id.toString(), payload);
+                        const updatedUser = await updateUser(String(user.id), payload);
 
                         if (updatedUser) {
                             set({ user: updatedUser, loading: false });
                             return updatedUser;
-                        } else {
-                            throw new Error("Update failed");
                         }
+
+                        throw new Error("Update failed");
                     } catch (err: any) {
-                        showErrorToast(err.response?.data?.message || "Error al actualizar el perfil.");
+                        showErrorToast(getErrorMessage(err, "Error al actualizar el perfil."));
                         set({ loading: false });
                         throw err;
                     }
                 },
 
                 updateUserTheme: async (themeId: string) => {
+                    const { user } = get();
+                    if (!user) return;
+
                     try {
-                        const updatedUserApi = await updateMyTheme(themeId);
+                        const updatedUserApi = await updateMyTheme(String(themeId));
                         const updatedUser = mapUserFromApi(updatedUserApi);
                         set({ user: updatedUser });
-                    } catch (error) {
-                        console.error("Failed to save theme preference", error);
+                    } catch (err: any) {
+                        console.error("Failed to save theme preference", err);
+                        showErrorToast(getErrorMessage(err, "No se pudo guardar el tema."));
                     }
                 },
             }),

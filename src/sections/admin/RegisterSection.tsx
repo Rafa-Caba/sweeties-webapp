@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/admin/useAuthStore';
 import { AuthWrapper, AuthCard, AuthTitle, AuthForm, AuthInput, AuthButton, AuthLink } from '../../styles/admin/AuthStyles';
-import type { RegisterFormDataFields } from '../../types';
+import type { RegisterPayload } from '../../types';
 
 export const RegisterSection = () => {
     const { register, loading } = useAuthStore();
     const navigate = useNavigate();
 
-    const [formData, setFormData] = useState<RegisterFormDataFields>({
+    const [formData, setFormData] = useState<RegisterPayload>({
         name: '',
         username: '',
         email: '',
