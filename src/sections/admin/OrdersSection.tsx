@@ -1,22 +1,27 @@
-import { useEffect } from 'react';
-import { useAdminOrdersStore } from '../../store/admin/useAdminOrdersStore';
-import { AdminLayout } from '../../components/admin/layout/AdminLayout';
-import { SectionBody, SectionHeader } from '../../styles/admin/DashboardStyles';
-import { OrdersTable, StatusBadge, FilterBar, FilterButton, ActionLink } from '../../styles/admin/OrderStyles';
-import type { OrderStatus } from '../../types';
+import { useEffect } from "react";
+import { useAdminOrdersStore } from "../../store/admin/useAdminOrdersStore";
+import { AdminLayout } from "../../components/admin/layout/AdminLayout";
+import { SectionBody, SectionHeader } from "../../styles/admin/DashboardStyles";
+import { OrdersTable, StatusBadge, FilterBar, FilterButton, ActionLink } from "../../styles/admin/OrderStyles";
+import type { OrderStatus } from "../../types";
+
+function formatDate(iso: string | null | undefined): string {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString();
+}
 
 export const OrdersSection = () => {
-    const { 
-        orders, loading, error, 
-        fetchOrders, filterStatus, setFilterStatus, page, setPage 
-    } = useAdminOrdersStore();
+    const { orders, loading, error, fetchOrders, filterStatus, setFilterStatus, page, setPage } = useAdminOrdersStore();
 
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders, filterStatus, page]);
 
-    const handleFilter = (status: OrderStatus | 'ALL') => {
+    const handleFilter = (status: OrderStatus | "ALL") => {
         setFilterStatus(status);
+        setPage(0);
     };
 
     return (
@@ -30,25 +35,21 @@ export const OrdersSection = () => {
 
             <SectionBody>
                 <FilterBar>
-                    {(['ALL', 'PENDIENTE', 'ENVIADO', 'ENTREGADO'] as const).map((s) => (
-                        <FilterButton 
-                            key={s} 
-                            $active={filterStatus === s}
-                            onClick={() => handleFilter(s)}
-                        >
-                            {s === 'ALL' ? 'Todos' : s}
+                    {(["ALL", "PENDIENTE", "ENVIADO", "ENTREGADO"] as const).map((s) => (
+                        <FilterButton key={s} $active={filterStatus === s} onClick={() => handleFilter(s)} type="button">
+                            {s === "ALL" ? "Todos" : s}
                         </FilterButton>
                     ))}
                 </FilterBar>
 
                 {loading && <p>Cargando pedidos...</p>}
-                {error && <p style={{color: 'red'}}>{error}</p>}
+                {error && <p style={{ color: "red" }}>{error}</p>}
 
                 {!loading && !error && orders.length === 0 && <p>No hay pedidos.</p>}
 
                 {!loading && !error && orders.length > 0 && (
                     <>
-                        <div style={{overflowX: 'auto'}}>
+                        <div style={{ overflowX: "auto" }}>
                             <OrdersTable>
                                 <thead>
                                     <tr>
@@ -65,11 +66,12 @@ export const OrdersSection = () => {
                                         <tr key={order.id}>
                                             <td>#{order.id}</td>
                                             <td>
-                                                {order.name}<br/>
-                                                <small style={{opacity: 0.7}}>{order.email}</small>
+                                                {order.name}
+                                                <br />
+                                                <small style={{ opacity: 0.7 }}>{order.email}</small>
                                             </td>
-                                            <td>${order.total.toFixed(2)}</td>
-                                            <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                                            <td>${Number(order.total).toFixed(2)}</td>
+                                            <td>{formatDate(order.createdAt)}</td>
                                             <td>
                                                 <StatusBadge $status={order.status}>{order.status}</StatusBadge>
                                             </td>
@@ -81,13 +83,15 @@ export const OrdersSection = () => {
                                 </tbody>
                             </OrdersTable>
                         </div>
-                        
-                        {/* Simple Pagination */}
-                        <div style={{marginTop: '1rem', display: 'flex', gap: '1rem', justifyContent: 'center'}}>
-                            <button disabled={page === 0} onClick={() => setPage(page - 1)}>Anterior</button>
+
+                        <div style={{ marginTop: "1rem", display: "flex", gap: "1rem", justifyContent: "center" }}>
+                            <button type="button" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                                Anterior
+                            </button>
                             <span>Página {page + 1}</span>
-                            {/* Since backend doesn't return hasNext, we guess if result was full (20) */}
-                            <button disabled={orders.length < 20} onClick={() => setPage(page + 1)}>Siguiente</button>
+                            <button type="button" disabled={orders.length < 20} onClick={() => setPage(page + 1)}>
+                                Siguiente
+                            </button>
                         </div>
                     </>
                 )}

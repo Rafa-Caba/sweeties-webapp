@@ -1,47 +1,56 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import { useAdminOrdersStore } from '../../store/admin/useAdminOrdersStore';
-import { AdminLayout } from '../../components/admin/layout/AdminLayout';
-import { SectionBody, SectionHeader } from '../../styles/admin/DashboardStyles';
-import { 
-    OrderDetailCard, DetailGrid, InfoGroup, ItemsList, StatusBadge 
-} from '../../styles/admin/OrderStyles';
-import { GhostBtn, PrimaryBtn } from '../../styles/admin/ItemsFormStyles';
-import type { OrderStatus } from '../../types';
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
+import { useAdminOrdersStore } from "../../store/admin/useAdminOrdersStore";
+import { AdminLayout } from "../../components/admin/layout/AdminLayout";
+import { SectionBody, SectionHeader } from "../../styles/admin/DashboardStyles";
+import { OrderDetailCard, DetailGrid, InfoGroup, ItemsList, StatusBadge } from "../../styles/admin/OrderStyles";
+import { GhostBtn, PrimaryBtn } from "../../styles/admin/ItemsFormStyles";
+import type { OrderStatus } from "../../types";
+
+function formatDateTime(iso: string | null | undefined): string {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString();
+}
 
 export const OrderDetailSection = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { currentOrder, fetchOrderById, updateStatus, loading } = useAdminOrdersStore();
-    
+
     const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
-        if (id) fetchOrderById(id);
+        if (id) fetchOrderById(String(id));
     }, [id, fetchOrderById]);
+
+    const orderIdLabel = useMemo(() => (currentOrder?.id ? `Orden #${currentOrder.id}` : "Detalle de Orden"), [currentOrder?.id]);
 
     const handleStatusChange = async (newStatus: OrderStatus) => {
         if (!id) return;
-        
+
         const { isConfirmed } = await Swal.fire({
             title: `¿Cambiar estado a ${newStatus}?`,
             text: "Esto podría enviar una notificación al cliente (si está configurado).",
-            icon: 'question',
+            icon: "question",
             showCancelButton: true,
-            confirmButtonText: 'Sí, cambiar',
+            confirmButtonText: "Sí, cambiar",
+            cancelButtonText: "Cancelar",
         });
 
-        if (isConfirmed) {
-            setIsUpdating(true);
-            const success = await updateStatus(id, newStatus);
-            setIsUpdating(false);
-            
-            if (success) {
-                Swal.fire('Actualizado', 'El estado ha sido cambiado.', 'success');
-            } else {
-                Swal.fire('Error', 'No se pudo cambiar el estado.', 'error');
-            }
+        if (!isConfirmed) return;
+
+        setIsUpdating(true);
+        const success = await updateStatus(String(id), newStatus);
+        setIsUpdating(false);
+
+        if (success) {
+            await Swal.fire("Actualizado", "El estado ha sido cambiado.", "success");
+        } else {
+            await Swal.fire("Error", "No se pudo cambiar el estado.", "error");
         }
     };
 
@@ -51,34 +60,64 @@ export const OrderDetailSection = () => {
         <AdminLayout>
             <SectionHeader>
                 <div>
-                    <h1>Orden #{currentOrder.id}</h1>
+                    <h1>{orderIdLabel}</h1>
                     <p>Detalles y gestión del pedido</p>
                 </div>
-                <GhostBtn onClick={() => navigate('/admin/orders')}>Volver</GhostBtn>
+                <GhostBtn type="button" onClick={() => navigate("/admin/orders")}>
+                    Volver
+                </GhostBtn>
             </SectionHeader>
 
             <SectionBody>
                 <OrderDetailCard>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem'}}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            flexWrap: "wrap",
+                            gap: "1rem",
+                        }}
+                    >
                         <div>
-                            <span style={{color: '#888', marginRight: '10px'}}>Estado actual:</span>
-                            <StatusBadge $status={currentOrder.status} style={{fontSize: '1.2rem'}}>{currentOrder.status}</StatusBadge>
+                            <span style={{ color: "#888", marginRight: "10px" }}>Estado actual:</span>
+                            <StatusBadge $status={currentOrder.status} style={{ fontSize: "1.2rem" }}>
+                                {currentOrder.status}
+                            </StatusBadge>
                         </div>
-                        
-                        <div style={{display: 'flex', gap: '0.5rem'}}>
-                            {currentOrder.status !== 'PENDIENTE' && (
-                                <GhostBtn disabled={isUpdating} onClick={() => handleStatusChange('PENDIENTE')}>Marcar Pendiente</GhostBtn>
+
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                            {currentOrder.status !== "PENDIENTE" && (
+                                <GhostBtn
+                                    type="button"
+                                    disabled={isUpdating}
+                                    onClick={() => handleStatusChange("PENDIENTE")}
+                                >
+                                    Marcar Pendiente
+                                </GhostBtn>
                             )}
-                            {currentOrder.status !== 'ENVIADO' && (
-                                <PrimaryBtn disabled={isUpdating} onClick={() => handleStatusChange('ENVIADO')}>Marcar Enviado</PrimaryBtn>
+                            {currentOrder.status !== "ENVIADO" && (
+                                <PrimaryBtn
+                                    type="button"
+                                    disabled={isUpdating}
+                                    onClick={() => handleStatusChange("ENVIADO")}
+                                >
+                                    Marcar Enviado
+                                </PrimaryBtn>
                             )}
-                            {currentOrder.status !== 'ENTREGADO' && (
-                                <PrimaryBtn disabled={isUpdating} onClick={() => handleStatusChange('ENTREGADO')}>Marcar Entregado</PrimaryBtn>
+                            {currentOrder.status !== "ENTREGADO" && (
+                                <PrimaryBtn
+                                    type="button"
+                                    disabled={isUpdating}
+                                    onClick={() => handleStatusChange("ENTREGADO")}
+                                >
+                                    Marcar Entregado
+                                </PrimaryBtn>
                             )}
                         </div>
                     </div>
 
-                    <hr style={{borderColor: '#eee'}} />
+                    <hr style={{ borderColor: "#eee" }} />
 
                     <DetailGrid>
                         <InfoGroup>
@@ -87,16 +126,21 @@ export const OrderDetailSection = () => {
                             <p>{currentOrder.email}</p>
                             <p>{currentOrder.phone}</p>
                         </InfoGroup>
-                        
+
                         <InfoGroup>
                             <h3>Detalles</h3>
-                            <p>Fecha: {new Date(currentOrder.createdAt).toLocaleString()}</p>
-                            <p>Total: <span style={{fontSize: '1.5rem', color: '#d63384'}}>${currentOrder.total.toFixed(2)}</span></p>
+                            <p>Fecha: {formatDateTime(currentOrder.createdAt)}</p>
+                            <p>
+                                Total:{" "}
+                                <span style={{ fontSize: "1.5rem", color: "#d63384" }}>
+                                    ${Number(currentOrder.total).toFixed(2)}
+                                </span>
+                            </p>
                         </InfoGroup>
 
                         <InfoGroup>
                             <h3>Nota del Cliente</h3>
-                            <p style={{fontStyle: 'italic'}}>{currentOrder.note || 'Sin nota'}</p>
+                            <p style={{ fontStyle: "italic" }}>{currentOrder.note || "Sin nota"}</p>
                         </InfoGroup>
                     </DetailGrid>
 
@@ -104,13 +148,11 @@ export const OrderDetailSection = () => {
                         <h3>Productos</h3>
                         <ItemsList>
                             {currentOrder.items.map((item, i) => (
-                                <li key={i}>
+                                <li key={`${item.productId}-${i}`}>
                                     <div>
                                         <strong>{item.quantity}x</strong> {item.name}
                                     </div>
-                                    <div>
-                                        ${item.price.toFixed(2)} c/u
-                                    </div>
+                                    <div>${item.price.toFixed(2)} c/u</div>
                                 </li>
                             ))}
                         </ItemsList>
