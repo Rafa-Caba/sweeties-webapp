@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
-import { useCartStore } from '../../store/public/useCartStore';
-import { useOrdersStore } from '../../store/public/useOrdersStore'; // <-- Import Orders Store
-import { sendOrder } from '../../services/public/checkout';
+import * as React from "react";
+import { useState } from "react";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
+import { useCartStore } from "../../store/public/useCartStore";
+import { useOrdersStore } from "../../store/public/useOrdersStore";
+import { sendOrder } from "../../services/public/checkout";
+
 import {
     CheckoutWrapper,
     CheckoutTitle,
@@ -11,8 +14,10 @@ import {
     InputGroup,
     Input,
     Textarea,
-    SubmitButton
-} from '../../styles/public/CheckoutStyles';
+    SubmitButton,
+} from "../../styles/public/CheckoutStyles";
+
+import type { Order } from "../../types/public/Order"; // adjust if your path differs
 
 export const CheckoutSection = () => {
     const navigate = useNavigate();
@@ -20,25 +25,31 @@ export const CheckoutSection = () => {
     const { addOrder } = useOrdersStore();
 
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        note: '',
+        name: "",
+        email: "",
+        phone: "",
+        note: "",
     });
+
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [e.target.name]: e.target.value,
-        });
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.email || !formData.phone) {
+        if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
             Swal.fire("Campos requeridos", "Por favor completa los campos obligatorios", "warning");
+            return;
+        }
+
+        if (items.length === 0) {
+            Swal.fire("Carrito vacío", "Agrega al menos un producto para continuar", "info");
             return;
         }
 
@@ -46,12 +57,20 @@ export const CheckoutSection = () => {
         try {
             const total = getTotal();
 
+            // ✅ API expects note?: string (undefined when empty)
+            const noteForApi: string | undefined = formData.note?.trim() ? formData.note.trim() : undefined;
+
+            // ✅ Local order type uses note: string | null
+            const noteForLocal: string | null = formData.note?.trim() ? formData.note.trim() : null;
+
             const payload = {
-                ...formData,
-                note: formData.note?.trim() ? formData.note.trim() : "",
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
+                note: noteForApi,
                 total,
                 items: items.map((item) => ({
-                    productId: item.id, // ya es string
+                    productId: item.id,
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
@@ -61,15 +80,27 @@ export const CheckoutSection = () => {
             const response = await sendOrder(payload);
 
             const nowIso = new Date().toISOString();
-            const localOrder = {
+
+            const localOrder: Order = {
                 id: response.orderId,
-                ...formData,
-                note: payload.note,
-                total,
-                status: "PENDIENTE" as const,
+                name: payload.name,
+                email: payload.email,
+                phone: payload.phone,
+                note: noteForLocal,
+
+                items: payload.items,
+                total: payload.total,
+                status: "PENDIENTE",
+
                 createdAt: nowIso,
                 updatedAt: nowIso,
-                items: payload.items,
+
+                // Email tracking defaults
+                emailStatus: "PENDING",
+                emailAttempts: 0,
+                emailLastAttemptAt: null,
+                emailSentAt: null,
+                emailLastError: null,
             };
 
             addOrder(localOrder);
@@ -94,56 +125,30 @@ export const CheckoutSection = () => {
     return (
         <CheckoutWrapper>
             <CheckoutTitle>🧾 Finalizar Pedido</CheckoutTitle>
+
             <CheckoutForm onSubmit={handleSubmit}>
                 <InputGroup>
                     <label htmlFor="name">Nombre completo *</label>
-                    <Input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                    />
+                    <Input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
                 </InputGroup>
 
                 <InputGroup>
                     <label htmlFor="email">Correo electrónico *</label>
-                    <Input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                    />
+                    <Input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required />
                 </InputGroup>
 
                 <InputGroup>
                     <label htmlFor="phone">WhatsApp o Teléfono *</label>
-                    <Input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                    />
+                    <Input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required />
                 </InputGroup>
 
                 <InputGroup>
                     <label htmlFor="note">Nota (opcional)</label>
-                    <Textarea
-                        id="note"
-                        name="note"
-                        rows={4}
-                        value={formData.note}
-                        onChange={handleChange}
-                    />
+                    <Textarea id="note" name="note" rows={4} value={formData.note} onChange={handleChange} />
                 </InputGroup>
 
                 <SubmitButton type="submit" disabled={loading}>
-                    {loading ? 'Enviando...' : 'Enviar pedido 🧵'}
+                    {loading ? "Enviando..." : "Enviar pedido 🧵"}
                 </SubmitButton>
             </CheckoutForm>
         </CheckoutWrapper>
