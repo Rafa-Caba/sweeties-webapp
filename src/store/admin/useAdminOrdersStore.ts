@@ -1,24 +1,36 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { adminGetOrders, adminGetOrderById, adminUpdateOrderStatus } from '../../services/admin/orders';
-import type { Order, OrderStatus } from '../../types';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import {
+    adminExportOrdersCsv,
+    adminGetOrderById,
+    adminGetOrders,
+    adminRetryOrderEmails,
+    adminUpdateOrderStatus,
+} from "../../services/admin/orders";
+import type { Order, OrderStatus } from "../../types";
+
+function getErrorMessage(e: any): string {
+    return e?.response?.data?.message || e?.message || "Error";
+}
 
 interface AdminOrdersState {
     orders: Order[];
     currentOrder: Order | null;
     loading: boolean;
     error: string | null;
-    
-    // Filters
-    filterStatus: OrderStatus | 'ALL';
+
+    filterStatus: OrderStatus | "ALL";
     page: number;
 
-    // Actions
-    setFilterStatus: (status: OrderStatus | 'ALL') => void;
+    setFilterStatus: (status: OrderStatus | "ALL") => void;
     setPage: (page: number) => void;
+
     fetchOrders: () => Promise<void>;
     fetchOrderById: (id: string) => Promise<void>;
     updateStatus: (id: string, status: OrderStatus) => Promise<boolean>;
+
+    retryEmails: (id: string) => Promise<boolean>;
+    exportCsv: () => Promise<boolean>;
 }
 
 export const useAdminOrdersStore = create<AdminOrdersState>()(
@@ -27,10 +39,10 @@ export const useAdminOrdersStore = create<AdminOrdersState>()(
         currentOrder: null,
         loading: false,
         error: null,
-        filterStatus: 'ALL',
+        filterStatus: "ALL",
         page: 0,
 
-        setFilterStatus: (status) => set({ filterStatus: status, page: 0 }), // Reset page on filter change
+        setFilterStatus: (status) => set({ filterStatus: status, page: 0 }),
         setPage: (page) => set({ page }),
 
         fetchOrders: async () => {
@@ -40,7 +52,7 @@ export const useAdminOrdersStore = create<AdminOrdersState>()(
                 const data = await adminGetOrders(filterStatus, page);
                 set({ orders: data });
             } catch (e: any) {
-                set({ error: e.message || 'Error al cargar órdenes' });
+                set({ error: getErrorMessage(e) });
             } finally {
                 set({ loading: false });
             }
@@ -52,29 +64,63 @@ export const useAdminOrdersStore = create<AdminOrdersState>()(
                 const data = await adminGetOrderById(id);
                 set({ currentOrder: data });
             } catch (e: any) {
-                set({ error: e.message || 'Error al cargar el detalle de la orden' });
+                set({ error: getErrorMessage(e) });
             } finally {
                 set({ loading: false });
             }
         },
 
         updateStatus: async (id, status) => {
-            set({ loading: true });
+            set({ loading: true, error: null });
             try {
                 const updated = await adminUpdateOrderStatus(id, status);
-                
-                // Update in list
-                const updatedOrders = get().orders.map(o => o.id === updated.id ? updated : o);
-                
-                // Update in current detail view
+
+                const updatedOrders = get().orders.map((o) => (o.id === updated.id ? updated : o));
                 set({ orders: updatedOrders, currentOrder: updated });
                 return true;
             } catch (e: any) {
-                set({ error: e.message || 'No se pudo actualizar el estado' });
+                set({ error: getErrorMessage(e) });
                 return false;
             } finally {
                 set({ loading: false });
             }
-        }
+        },
+
+        retryEmails: async (id) => {
+            set({ loading: true, error: null });
+            try {
+                const updated = await adminRetryOrderEmails(id);
+
+                const updatedOrders = get().orders.map((o) => (o.id === updated.id ? updated : o));
+                set({ orders: updatedOrders, currentOrder: updated });
+                return true;
+            } catch (e: any) {
+                set({ error: getErrorMessage(e) });
+                return false;
+            } finally {
+                set({ loading: false });
+            }
+        },
+
+        exportCsv: async () => {
+            set({ error: null });
+            try {
+                const blob = await adminExportOrdersCsv();
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+                return true;
+            } catch (e: any) {
+                set({ error: getErrorMessage(e) });
+                return false;
+            }
+        },
     }))
 );

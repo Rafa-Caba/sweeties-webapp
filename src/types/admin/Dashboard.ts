@@ -7,5 +7,7 @@ export interface DashboardStats {
     ordersShipped: number;
     ordersDelivered: number;
 
+    failedEmailsCount: number;
+
     totalRevenue: number;
 }

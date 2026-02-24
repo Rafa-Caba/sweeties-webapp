@@ -2,7 +2,16 @@ import { useEffect } from "react";
 import { useAdminOrdersStore } from "../../store/admin/useAdminOrdersStore";
 import { AdminLayout } from "../../components/admin/layout/AdminLayout";
 import { SectionBody, SectionHeader } from "../../styles/admin/DashboardStyles";
-import { OrdersTable, StatusBadge, FilterBar, FilterButton, ActionLink } from "../../styles/admin/OrderStyles";
+import {
+    OrdersTable,
+    StatusBadge,
+    EmailBadge,
+    FilterBar,
+    FilterButton,
+    ActionLink,
+    TopActionsRow,
+    ExportButton,
+} from "../../styles/admin/OrderStyles";
 import type { OrderStatus } from "../../types";
 
 function formatDate(iso: string | null | undefined): string {
@@ -13,7 +22,8 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 export const OrdersSection = () => {
-    const { orders, loading, error, fetchOrders, filterStatus, setFilterStatus, page, setPage } = useAdminOrdersStore();
+    const { orders, loading, error, fetchOrders, filterStatus, setFilterStatus, page, setPage, exportCsv } =
+        useAdminOrdersStore();
 
     useEffect(() => {
         fetchOrders();
@@ -34,13 +44,19 @@ export const OrdersSection = () => {
             </SectionHeader>
 
             <SectionBody>
-                <FilterBar>
-                    {(["ALL", "PENDIENTE", "ENVIADO", "ENTREGADO"] as const).map((s) => (
-                        <FilterButton key={s} $active={filterStatus === s} onClick={() => handleFilter(s)} type="button">
-                            {s === "ALL" ? "Todos" : s}
-                        </FilterButton>
-                    ))}
-                </FilterBar>
+                <TopActionsRow>
+                    <FilterBar>
+                        {(["ALL", "PENDIENTE", "ENVIADO", "ENTREGADO"] as const).map((s) => (
+                            <FilterButton key={s} $active={filterStatus === s} onClick={() => handleFilter(s)} type="button">
+                                {s === "ALL" ? "Todos" : s}
+                            </FilterButton>
+                        ))}
+                    </FilterBar>
+
+                    <ExportButton type="button" disabled={loading} onClick={() => void exportCsv()}>
+                        Exportar CSV
+                    </ExportButton>
+                </TopActionsRow>
 
                 {loading && <p>Cargando pedidos...</p>}
                 {error && <p style={{ color: "red" }}>{error}</p>}
@@ -58,6 +74,7 @@ export const OrdersSection = () => {
                                         <th>Total</th>
                                         <th>Fecha</th>
                                         <th>Estado</th>
+                                        <th>Email</th>
                                         <th>Acción</th>
                                     </tr>
                                 </thead>
@@ -74,6 +91,14 @@ export const OrdersSection = () => {
                                             <td>{formatDate(order.createdAt)}</td>
                                             <td>
                                                 <StatusBadge $status={order.status}>{order.status}</StatusBadge>
+                                            </td>
+                                            <td>
+                                                <EmailBadge $status={order.emailStatus}>
+                                                    {order.emailStatus}
+                                                </EmailBadge>
+                                                <div style={{ marginTop: "0.35rem", fontSize: "0.82rem", opacity: 0.75 }}>
+                                                    Intentos: {order.emailAttempts}
+                                                </div>
                                             </td>
                                             <td>
                                                 <ActionLink to={`/admin/orders/${order.id}`}>Ver Detalle</ActionLink>

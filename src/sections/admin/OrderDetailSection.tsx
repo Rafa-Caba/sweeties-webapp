@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { useAdminOrdersStore } from "../../store/admin/useAdminOrdersStore";
 import { AdminLayout } from "../../components/admin/layout/AdminLayout";
 import { SectionBody, SectionHeader } from "../../styles/admin/DashboardStyles";
-import { OrderDetailCard, DetailGrid, InfoGroup, ItemsList, StatusBadge } from "../../styles/admin/OrderStyles";
+import { OrderDetailCard, DetailGrid, InfoGroup, ItemsList, StatusBadge, EmailBadge } from "../../styles/admin/OrderStyles";
 import { GhostBtn, PrimaryBtn } from "../../styles/admin/ItemsFormStyles";
 import type { OrderStatus } from "../../types";
 
@@ -19,15 +19,19 @@ function formatDateTime(iso: string | null | undefined): string {
 export const OrderDetailSection = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { currentOrder, fetchOrderById, updateStatus, loading } = useAdminOrdersStore();
+    const { currentOrder, fetchOrderById, updateStatus, retryEmails, loading } = useAdminOrdersStore();
 
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
 
     useEffect(() => {
         if (id) fetchOrderById(String(id));
     }, [id, fetchOrderById]);
 
-    const orderIdLabel = useMemo(() => (currentOrder?.id ? `Orden #${currentOrder.id}` : "Detalle de Orden"), [currentOrder?.id]);
+    const orderIdLabel = useMemo(
+        () => (currentOrder?.id ? `Orden #${currentOrder.id}` : "Detalle de Orden"),
+        [currentOrder?.id]
+    );
 
     const handleStatusChange = async (newStatus: OrderStatus) => {
         if (!id) return;
@@ -54,7 +58,34 @@ export const OrderDetailSection = () => {
         }
     };
 
+    const handleRetryEmails = async () => {
+        if (!id || !currentOrder) return;
+
+        const { isConfirmed } = await Swal.fire({
+            title: "¿Reintentar envío de correo?",
+            text: "Esto intentará enviar correos al cliente y al admin nuevamente.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sí, reintentar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!isConfirmed) return;
+
+        setIsRetrying(true);
+        const ok = await retryEmails(String(id));
+        setIsRetrying(false);
+
+        if (ok) {
+            await Swal.fire("Listo", "Se reintentó el envío de correos.", "success");
+        } else {
+            await Swal.fire("Error", "No se pudo reintentar el envío.", "error");
+        }
+    };
+
     if (loading || !currentOrder) return <AdminLayout>Cargando detalle...</AdminLayout>;
+
+    const canRetry = currentOrder.emailStatus !== "SENT";
 
     return (
         <AdminLayout>
@@ -80,37 +111,51 @@ export const OrderDetailSection = () => {
                         }}
                     >
                         <div>
-                            <span style={{ color: "#888", marginRight: "10px" }}>Estado actual:</span>
-                            <StatusBadge $status={currentOrder.status} style={{ fontSize: "1.2rem" }}>
-                                {currentOrder.status}
-                            </StatusBadge>
+                            <div style={{ marginBottom: "0.5rem" }}>
+                                <span style={{ color: "#888", marginRight: "10px" }}>Estado actual:</span>
+                                <StatusBadge $status={currentOrder.status} style={{ fontSize: "1.2rem" }}>
+                                    {currentOrder.status}
+                                </StatusBadge>
+                            </div>
+
+                            <div>
+                                <span style={{ color: "#888", marginRight: "10px" }}>Email:</span>
+                                <EmailBadge $status={currentOrder.emailStatus} style={{ fontSize: "0.95rem" }}>
+                                    {currentOrder.emailStatus}
+                                </EmailBadge>
+
+                                <div style={{ marginTop: "0.35rem", fontSize: "0.9rem", opacity: 0.8 }}>
+                                    Intentos: {currentOrder.emailAttempts} • Último intento:{" "}
+                                    {formatDateTime(currentOrder.emailLastAttemptAt)}
+                                </div>
+
+                                {currentOrder.emailLastError ? (
+                                    <div style={{ marginTop: "0.35rem", fontSize: "0.9rem", color: "crimson" }}>
+                                        Error: {currentOrder.emailLastError}
+                                    </div>
+                                ) : null}
+                            </div>
                         </div>
 
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                            {canRetry && (
+                                <GhostBtn type="button" disabled={isRetrying} onClick={handleRetryEmails}>
+                                    {isRetrying ? "Reintentando..." : "Reintentar Email"}
+                                </GhostBtn>
+                            )}
+
                             {currentOrder.status !== "PENDIENTE" && (
-                                <GhostBtn
-                                    type="button"
-                                    disabled={isUpdating}
-                                    onClick={() => handleStatusChange("PENDIENTE")}
-                                >
+                                <GhostBtn type="button" disabled={isUpdating} onClick={() => handleStatusChange("PENDIENTE")}>
                                     Marcar Pendiente
                                 </GhostBtn>
                             )}
                             {currentOrder.status !== "ENVIADO" && (
-                                <PrimaryBtn
-                                    type="button"
-                                    disabled={isUpdating}
-                                    onClick={() => handleStatusChange("ENVIADO")}
-                                >
+                                <PrimaryBtn type="button" disabled={isUpdating} onClick={() => handleStatusChange("ENVIADO")}>
                                     Marcar Enviado
                                 </PrimaryBtn>
                             )}
                             {currentOrder.status !== "ENTREGADO" && (
-                                <PrimaryBtn
-                                    type="button"
-                                    disabled={isUpdating}
-                                    onClick={() => handleStatusChange("ENTREGADO")}
-                                >
+                                <PrimaryBtn type="button" disabled={isUpdating} onClick={() => handleStatusChange("ENTREGADO")}>
                                     Marcar Entregado
                                 </PrimaryBtn>
                             )}

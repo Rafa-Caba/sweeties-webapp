@@ -1,4 +1,5 @@
 export type OrderStatus = "PENDIENTE" | "ENVIADO" | "ENTREGADO";
+export type EmailStatus = "PENDING" | "SENT" | "FAILED";
 
 export interface OrderItem {
     productId: string;
@@ -20,9 +21,14 @@ export interface Order {
 
     createdAt: string | null;
     updatedAt: string | null;
+
+    emailStatus: EmailStatus;
+    emailAttempts: number;
+    emailLastAttemptAt: string | null;
+    emailSentAt: string | null;
+    emailLastError: string | null;
 }
 
-// Public tracking payload
 export interface TrackOrderPayload {
     orderId: string;
     email: string;

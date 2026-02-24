@@ -1,109 +1,135 @@
 import styled from "styled-components";
 
 export const DashboardWrapper = styled.section`
-    padding: 8.5rem 1.5rem 2.5rem;
+    padding: 9rem 2rem 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: left;
-
-    @media (max-width: 768px) {
-        padding: 7.5rem 1rem 2rem;
-    }
+    text-align: center;
 `;
 
 export const InfoCard = styled.div`
-    width: 100%;
-    max-width: 980px;
     background-color: ${({ theme }) => theme.colors.card};
     color: ${({ theme }) => theme.colors.text};
     box-shadow: ${({ theme }) => theme.shadows.card};
     border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: 16px;
-    padding: 1.5rem 1.75rem;
-    margin: 1.25rem auto;
-
-    @media (max-width: 768px) {
-        padding: 1.25rem;
-        border-radius: 14px;
-    }
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    margin: 2rem auto;
 `;
 
 export const LogoutButton = styled.button`
-    margin-top: 1.5rem;
-    padding: 0.85rem 1.25rem;
+    margin-top: 2rem;
+    padding: 0.75rem 1.5rem;
     font-size: 1rem;
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: 12px;
+    border: none;
+    border-radius: 8px;
     background-color: ${({ theme }) => theme.colors.button};
     color: ${({ theme }) => theme.colors.buttonText};
     cursor: pointer;
     box-shadow: ${({ theme }) => theme.shadows.card};
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    transition: all 0.3s ease;
 
     &:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.03);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
-    }
-
-    &:active {
-        transform: translateY(0px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        background-color: ${({ theme }) => theme.colors.buttonHover};
+        transform: scale(1.05);
     }
 
     &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
-        box-shadow: ${({ theme }) => theme.shadows.card};
     }
 `;
 
 export const SectionHeader = styled.header`
-    width: 100%;
-    max-width: 980px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
-    margin: 0 auto 1.25rem;
+    align-items: end;
+    margin-bottom: 1.5rem;
 
     h1 {
         margin: 0;
-        font-size: clamp(1.75rem, 2.2vw, 2.25rem);
-        line-height: 1.15;
-        letter-spacing: -0.02em;
+        font-size: clamp(2.3rem, 2vw, 2rem);
+        line-height: 1.2;
     }
 
     p {
-        margin: 0.35rem 0 0;
-        opacity: 0.78;
+        margin: 0.25rem 0 0;
+        opacity: 0.8;
         font-size: 0.95rem;
     }
 
     @media (max-width: 768px) {
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        text-align: center;
-        margin-top: 1.25rem;
+        margin-top: 2.2rem;
+        flex-direction: column;
 
-        h1 {
-            font-size: 1.8rem;
+        h1,
+        p {
+            text-align: center;
         }
     }
 `;
 
 export const SectionBody = styled.section`
-    width: 100%;
-    max-width: 980px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 1rem;
 `;
 
-export const StatsGrid = styled.div`
+/** ✅ New: topic-based grouping layout */
+export const StatsGroups = styled.div`
+    width: 100%;
+    display: grid;
+    gap: 1.25rem;
+`;
+
+export const StatsGroup = styled.section`
+    width: 100%;
+    background: ${({ theme }) => theme.colors.card};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: 18px;
+    padding: 1rem 1rem 1.1rem;
+    box-shadow: ${({ theme }) => theme.shadows.card};
+`;
+
+export const StatsGroupHeader = styled.div`
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+
+    @media (max-width: 640px) {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+`;
+
+export const StatsGroupTitle = styled.h3`
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 850;
+    letter-spacing: -0.01em;
+`;
+
+export const StatsGroupHint = styled.p`
+    margin: 0.15rem 0 0;
+    font-size: 0.9rem;
+    opacity: 0.75;
+`;
+
+export const StatsGroupMeta = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.8;
+    font-size: 0.85rem;
+`;
+
+/** Grid inside each group */
+export const StatsGroupGrid = styled.div`
     width: 100%;
     display: grid;
     gap: 1rem;
@@ -186,7 +212,7 @@ export const StatCard = styled.div`
         border-radius: 12px;
         display: grid;
         place-items: center;
-        background: rgba(103, 58, 183, 0.10);
+        background: rgba(103, 58, 183, 0.1);
         border: 1px solid rgba(103, 58, 183, 0.18);
         color: ${({ theme }) => theme.colors.accent || "rgba(103, 58, 183, 1)"};
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
@@ -220,6 +246,12 @@ export const StatCard = styled.div`
         background: rgba(241, 196, 15, 0.14);
         border-color: rgba(241, 196, 15, 0.25);
         color: rgba(241, 196, 15, 1);
+    }
+
+    .icon--danger {
+        background: rgba(231, 76, 60, 0.14);
+        border-color: rgba(231, 76, 60, 0.25);
+        color: rgba(231, 76, 60, 1);
     }
 
     &:hover {
