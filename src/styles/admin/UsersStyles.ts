@@ -42,6 +42,7 @@ export const UserInfo = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  margin-right: 1rem;
 
   strong {
     font-weight: 600;
@@ -59,6 +60,7 @@ export const UserActions = styled.div`
   display: flex;
   gap: 0.75rem;
   margin-left: auto;
+  flex-direction: column;
 
   button {
     background-color: ${({ theme }) => theme.colors.button};

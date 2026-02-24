@@ -18,7 +18,7 @@ interface Props {
 export const UserCard = ({ user, onDelete, onEdit }: Props) => {
     return (
         <UserCardWrapper>
-            <UserImage src={user.imageUrl || "/default-user.png"} alt={user.username} />
+            <UserImage src={user.imageUrl || "./default-user.png"} alt={user.username} />
 
             <UserInfo>
                 <UserName>@{user.username}</UserName>

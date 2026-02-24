@@ -1,11 +1,20 @@
 import api from "../../api/axios.api";
-import type { User } from "../../types";
+import type { User, Role } from "../../types";
 
 export type PaginatedUsersResponse = {
     page: number;
     limit: number;
     total: number;
     items: User[];
+};
+
+export type CreateUserPayload = {
+    name: string;
+    username: string;
+    email: string;
+    password: string;
+    role: Role;
+    bio: string | null;
 };
 
 // GET /api/users (admin) -> { page, limit, total, items }
@@ -19,15 +28,15 @@ export const adminGetUserById = async (id: string): Promise<User> => {
     return data;
 };
 
-// multipart/form-data (user JSON blob + optional image file)
-export const adminCreateUser = async (form: FormData): Promise<User> => {
-    const { data } = await api.post<User>("/users", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+// POST /api/users (JSON body)
+// Backend route currently validates CreateUserSchema (JSON) and does NOT accept `user` multipart field.
+export const adminCreateUser = async (payload: CreateUserPayload): Promise<User> => {
+    const { data } = await api.post<User>("/users", payload);
     return data;
 };
 
 // PATCH /api/users/:id (multipart)
+// Backend expects: `user` JSON STRING + optional `image` file
 export const adminUpdateUser = async (id: string, form: FormData): Promise<User> => {
     const { data } = await api.patch<User>(`/users/${id}`, form, {
         headers: { "Content-Type": "multipart/form-data" },

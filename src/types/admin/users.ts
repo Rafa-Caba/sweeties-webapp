@@ -13,6 +13,24 @@ export interface User {
     themeId: string | null;
 }
 
+export type CreateUserPayload = {
+    name: string;
+    username: string;
+    email: string;
+    password: string;
+    role: Role;
+    bio: string | null;
+};
+
+export type UpdateUserPayload = {
+    name: string;
+    username: string;
+    email: string;
+    role: Role;
+    bio: string | null;
+    password?: string;
+};
+
 export const mapUserFromApi = (user: any): User => ({
     id: String(user?.id ?? ""),
     name: user?.name ?? "",

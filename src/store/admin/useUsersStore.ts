@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { mapUserFromApi, type User } from "../../types";
+import { mapUserFromApi, type CreateUserPayload, type User } from "../../types";
 import {
     adminGetAllUsers,
     adminGetUserById,
@@ -20,7 +20,7 @@ interface AdminUsersState {
     fetchUserById: (id: string) => Promise<User | undefined>;
     clearCurrentUser: () => void;
 
-    createUser: (form: FormData) => Promise<User | null>;
+    createUser: (payload: CreateUserPayload) => Promise<User | null>;
     updateUser: (id: string, form: FormData) => Promise<User | null>;
     deleteUser: (id: string) => Promise<boolean>;
 }
@@ -39,7 +39,7 @@ export const useUsersStore = create<AdminUsersState>()(
                     set({ loading: true, error: null });
                     try {
                         const data = await adminGetAllUsers();
-                        set({ users: data.items.map(mapUserFromApi) });
+                        set({ users: (data.items ?? []).map(mapUserFromApi) });
                     } catch (e: any) {
                         set({ error: e?.message || "Error loading users" });
                     } finally {
@@ -63,10 +63,11 @@ export const useUsersStore = create<AdminUsersState>()(
 
                 clearCurrentUser: () => set({ currentUser: null }),
 
-                createUser: async (form) => {
+                // Create with JSON payload
+                createUser: async (payload) => {
                     set({ error: null });
                     try {
-                        const createdApi = await adminCreateUser(form);
+                        const createdApi = await adminCreateUser(payload);
                         const created = mapUserFromApi(createdApi);
                         set({ users: [created, ...get().users] });
                         return created;
@@ -76,6 +77,7 @@ export const useUsersStore = create<AdminUsersState>()(
                     }
                 },
 
+                // Update with multipart
                 updateUser: async (id: string, form: FormData) => {
                     set({ error: null });
                     try {

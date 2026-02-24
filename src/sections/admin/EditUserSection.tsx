@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -51,7 +52,7 @@ export const EditUserSection = () => {
                 username: user.username ?? "",
                 email: user.email ?? "",
                 password: "",
-                role: user.role as Role, // already lowercase
+                role: user.role as Role,
                 bio: user.bio ?? "",
                 image: null,
                 imagePreview: user.imageUrl ?? "",
@@ -97,37 +98,32 @@ export const EditUserSection = () => {
         e.preventDefault();
 
         if (!id) return;
-
         if (!validateForm()) return;
 
         const userDTO = {
-            name: formData.name,
-            username: formData.username,
-            email: formData.email,
+            name: formData.name.trim(),
+            username: formData.username.trim(),
+            email: formData.email.trim(),
             role: formData.role,
             bio: formData.bio?.trim() ? formData.bio.trim() : null,
             ...(formData.password ? { password: formData.password } : {}),
         };
 
         const data = new FormData();
-        data.append(
-            "user",
-            new Blob([JSON.stringify(userDTO)], {
-                type: "application/json",
-            })
-        );
+        // IMPORTANT: send JSON as TEXT, not Blob (avoid multer "Unexpected field")
+        data.append("user", JSON.stringify(userDTO));
 
         if (formData.image) {
             data.append("image", formData.image);
         }
 
-        const updatedUser = await updateUser(id, data);
+        const updatedUser = await updateUser(String(id), data);
 
         if (updatedUser) {
-            Swal.fire("¡Usuario actualizado!", "", "success");
+            await Swal.fire("¡Usuario actualizado!", "", "success");
             navigate("/admin/users");
         } else {
-            Swal.fire("Error", "Ocurrió un error al actualizar el usuario.", "error");
+            await Swal.fire("Error", "Ocurrió un error al actualizar el usuario.", "error");
         }
     };
 

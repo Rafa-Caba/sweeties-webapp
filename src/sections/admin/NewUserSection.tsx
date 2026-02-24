@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { useNavigate, Link } from "react-router-dom";
@@ -75,7 +76,7 @@ export const NewUserSection = () => {
         e.preventDefault();
 
         if (!validateForm()) {
-            Swal.fire({
+            await Swal.fire({
                 icon: "error",
                 title: "Campos obligatorios",
                 text: "Por favor completa todos los campos requeridos.",
@@ -83,34 +84,37 @@ export const NewUserSection = () => {
             return;
         }
 
-        const userDTO = {
-            name: formData.name,
-            username: formData.username,
-            email: formData.email,
+        // IMPORTANT:
+        // Backend POST /api/users currently expects JSON body (CreateUserSchema).
+        // It does NOT accept multipart `user` (binary). Image upload on create is not supported by this route.
+        if (formData.image) {
+            const { isConfirmed } = await Swal.fire({
+                icon: "info",
+                title: "Imagen en creación",
+                text: "Por ahora la creación de usuario no soporta imagen. Puedes crear el usuario y luego editarlo para subir imagen. ¿Deseas continuar?",
+                showCancelButton: true,
+                confirmButtonText: "Sí, continuar",
+                cancelButtonText: "Cancelar",
+            });
+            if (!isConfirmed) return;
+        }
+
+        const payload = {
+            name: formData.name.trim(),
+            username: formData.username.trim(),
+            email: formData.email.trim(),
             password: formData.password,
             role: formData.role,
             bio: formData.bio?.trim() ? formData.bio.trim() : null,
         };
 
-        const data = new FormData();
-        data.append(
-            "user",
-            new Blob([JSON.stringify(userDTO)], {
-                type: "application/json",
-            })
-        );
-
-        if (formData.image) {
-            data.append("image", formData.image);
-        }
-
-        const createdUser = await createUser(data);
+        const createdUser = await createUser(payload);
 
         if (createdUser) {
-            Swal.fire("¡Usuario creado!", "", "success");
+            await Swal.fire("¡Usuario creado!", "", "success");
             navigate("/admin/users");
         } else {
-            Swal.fire("Error", "Ocurrió un error al crear el usuario.", "error");
+            await Swal.fire("Error", "Ocurrió un error al crear el usuario.", "error");
         }
     };
 
@@ -119,7 +123,7 @@ export const NewUserSection = () => {
             <SectionHeader>
                 <div>
                     <h1>Nuevo Usuario</h1>
-                    <p>Crea un nuevo usuario con datos básicos e imagen de perfil</p>
+                    <p>Crea un nuevo usuario con datos básicos</p>
                 </div>
             </SectionHeader>
 
@@ -165,10 +169,11 @@ export const NewUserSection = () => {
                         <FormTextarea name="bio" value={formData.bio} onChange={handleChange} />
                     </FormGroup>
 
+                    {/* Keep UI (optional): show preview but doesn't upload on create */}
                     <FormGroup>
-                        <FormLabel>Imagen de Perfil</FormLabel>
+                        <FormLabel>Imagen de Perfil (se sube al editar)</FormLabel>
                         {formData.imagePreview && <ImagePreview src={formData.imagePreview} alt="Preview" />}
-                        <UploadLabel htmlFor="image">Subir Imagen</UploadLabel>
+                        <UploadLabel htmlFor="image">Seleccionar Imagen</UploadLabel>
                         <input
                             type="file"
                             id="image"

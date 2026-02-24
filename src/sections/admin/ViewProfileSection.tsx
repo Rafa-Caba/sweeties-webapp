@@ -12,7 +12,7 @@ import {
     ButtonGroup,
     SubmitButton
 } from '../../styles/admin/ProfileStyles';
-import { GhostBtn } from '../../styles/admin/ItemsFormStyles'; // Reusing your existing Ghost Button
+import { GhostBtn } from '../../styles/admin/ItemsFormStyles';
 
 interface Props {
     onEdit: () => void;
@@ -34,12 +34,12 @@ export const ViewProfileSection = ({ onEdit }: Props) => {
 
             <SectionBody>
                 <ProfileCard>
-                    <AvatarLarge 
-                        src={user.imageUrl || 'https://via.placeholder.com/150'} 
-                        alt={user.name} 
+                    <AvatarLarge
+                        src={user.imageUrl || './default-user.png'}
+                        alt={user.name}
                     />
-                    
-                    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem'}}>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                         <ProfileName>{user.name}</ProfileName>
                         <ProfileRole>{user.role}</ProfileRole>
                     </div>
